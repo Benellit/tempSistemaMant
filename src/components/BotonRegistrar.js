@@ -1,0 +1,60 @@
+import AntDesign from '@expo/vector-icons/AntDesign';
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import { useState } from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+
+function BottomTabNavigator() {
+    const navigation = useNavigation();
+    const route = useRoute();
+    const [activeTab, setActiveTab] = useState(route.name);
+
+    useFocusEffect(() => {
+        setActiveTab(route.name);
+    });
+    return (
+        <View style={styles.bottomContainer}>
+            {/* Mostrara el + en caso de estar en una de estas pantallas */}
+            {(activeTab === "Sucursales" || activeTab === "Tareas" || activeTab === "Usuarios") && (
+                <TouchableOpacity
+                    style={styles.floatingButton}
+                    onPress={() => {
+                        if (activeTab === "Sucursales") navigation.navigate("RegistrarSucursales");
+                        if (activeTab === "Tareas") navigation.navigate("RegistrarTareas");
+                        if (activeTab === "Usuarios") navigation.navigate("RegistrarUsuarios");
+                    }}
+                >
+                    <AntDesign name="plus" size={28} color="white" />
+                </TouchableOpacity>
+            )}
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    bottomContainer: {
+        backgroundColor: "white",
+        paddingBottom: 5,
+        borderRadius: 5,
+        borderTopColor: "#f0f0f0",
+        borderTopWidth: 1,
+    },
+    floatingButton: {
+        position: "absolute",
+        bottom: 40,
+        right: 25,
+        backgroundColor: "#3c67bd",
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        alignItems: "center",
+        justifyContent: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 6,
+        zIndex: 10,
+    },
+});
+
+export default BottomTabNavigator;

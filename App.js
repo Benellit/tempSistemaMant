@@ -5,17 +5,20 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Login from "./src/screens/login/Login";
 
 // TODAS LAS PANTALLAS
-  // Admin
-  import HomeAdmin from "./src/screens/admin/HomeAdmin";
-  import SucursalesAdmin from "./src/screens/admin/SucursalesAdmin";
-  // Gestor
-  import HomeGestor from "./src/screens/gestor/HomeGestor";
-  import UsuariosGestor from "./src/screens/gestor/UsuariosGestor";
-  // Tecnico
-  import HomeTecnico from "./src/screens/tecnico/HomeTecnico";
-  // Shared
-  import PerfilShared from "./src/screens/shared/PerfilShared";
-  import TareasShared from "./src/screens/shared/TareasShared";
+// Admin
+import HomeAdmin from "./src/screens/admin/HomeAdmin";
+import RegistrarSucursalesAdmin from "./src/screens/admin/RegistrarSucursalesAdmin";
+import SucursalesAdmin from "./src/screens/admin/SucursalesAdmin";
+// Gestor
+import HomeGestor from "./src/screens/gestor/HomeGestor";
+import RegistrarTareasGestor from "./src/screens/gestor/RegistrarTareasGestor";
+import RegistrarUsuariosGestor from "./src/screens/gestor/RegistrarUsuariosGestor";
+import UsuariosGestor from "./src/screens/gestor/UsuariosGestor";
+// Tecnico
+import HomeTecnico from "./src/screens/tecnico/HomeTecnico";
+// Shared
+import PerfilShared from "./src/screens/shared/PerfilShared";
+import TareasShared from "./src/screens/shared/TareasShared";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -23,11 +26,41 @@ const Tab = createBottomTabNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="AdminTabs" component={AdminScreens} />
-        <Stack.Screen name="GestorTabs" component={GestorScreens} />
-        <Stack.Screen name="TecnicoTabs" component={TecnicoScreens} />
+      <Stack.Navigator initialRouteName="Login" screenOptions={{
+        cardStyleInterpolator: () => ({ cardStyle: { opacity: 1 } })
+      }}>
+        <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
+        <Stack.Screen name="AdminTabs" component={AdminScreens} options={{ headerShown: false }} />
+        <Stack.Screen name="GestorTabs" component={GestorScreens} options={{ headerShown: false }} />
+        <Stack.Screen name="TecnicoTabs" component={TecnicoScreens} options={{ headerShown: false }} />
+        <Stack.Screen name="RegistrarTareas" component={RegistrarTareasGestor} options={{
+          headerTitle: "",
+          headerStyle: {
+            backgroundColor: "#618ccfff",
+            height: 80,
+          },
+          headerTintColor: "#fff",
+        }} />
+        <Stack.Screen name="RegistrarSucursales" component={RegistrarSucursalesAdmin}
+          options={{
+            headerTitle: "",
+            headerStyle: {
+              backgroundColor: "#618ccfff", // cambiar el color :)
+              height: 80,
+            },
+            headerTintColor: "#fff",
+          }}
+        />
+        <Stack.Screen name="RegistrarUsuarios" component={RegistrarUsuariosGestor}
+          options={{
+            headerTitle: "",
+            headerStyle: {
+              backgroundColor: "#618ccfff", // cambiar el color :)
+              height: 80,
+            },
+            headerTintColor: "#fff",
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
