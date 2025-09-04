@@ -12,7 +12,7 @@ export default function TareasShared({ navigation }) {
         }, 2000); // Simula carga de datos
     };
     return (
-        <View style={{ flex: 1, marginTop: 30 }}>
+        <View style={{ flex: 1, paddingTop: 30 }}>
             <ScrollView
                 contentContainerStyle={{ padding: 20 }}
                 refreshControl={

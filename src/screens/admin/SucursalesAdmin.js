@@ -13,14 +13,14 @@ export default function SucursalesAdmin({ navigation }) {
     };
 
     return (
-        <View style={{ flex: 1, marginTop: 30 }}>
+        <View style={{ flex: 1, paddingTop: 30 }}>
             <ScrollView
                 contentContainerStyle={{ padding: 20 }}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
             >
-                <Text>Home</Text>
+                <Text>Sucursales del sistema</Text>
                 <Button
                     title="Sucursal Zona Centro"
                     onPress={() => navigation.navigate("GestorTabs")}

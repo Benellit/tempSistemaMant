@@ -6,6 +6,7 @@ import Login from "./src/screens/login/Login";
 
 // TODAS LAS PANTALLAS
 // Admin
+import Administradores from "./src/screens/admin/Administradores";
 import HomeAdmin from "./src/screens/admin/HomeAdmin";
 import RegistrarSucursalesAdmin from "./src/screens/admin/RegistrarSucursalesAdmin";
 import SucursalesAdmin from "./src/screens/admin/SucursalesAdmin";
@@ -71,6 +72,7 @@ function AdminScreens() {
     <Tab.Navigator screenOptions={{ headerShown: false }}>
       <Tab.Screen name="Home" component={HomeAdmin} />
       <Tab.Screen name="Sucursales" component={SucursalesAdmin} />
+      <Tab.Screen name="Admins" component={Administradores} />
       <Tab.Screen name="Profile" component={PerfilShared} />
     </Tab.Navigator>
   );

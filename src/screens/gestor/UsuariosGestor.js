@@ -19,7 +19,7 @@ export default function UsuariosGestor({ navigation }) {
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
             >
-                <Text>Home</Text>
+                <Text>Usuarios</Text>
             </ScrollView>
             <View>
                 <BotonRegistrar />

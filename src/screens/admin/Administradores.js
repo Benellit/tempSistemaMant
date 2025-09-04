@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-export default function HomeAdmin() {
+const Administradores = () => {
     return (
         <View style={styles.container}>
-            <Text>Home de los administradores</Text>
+            <Text>Administradores</Text>
         </View>
     )
 }
@@ -11,7 +11,9 @@ export default function HomeAdmin() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 50,
         padding: 20,
+        paddingTop: 50,
     }
 });
+
+export default Administradores
