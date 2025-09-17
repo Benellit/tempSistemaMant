@@ -1,6 +1,9 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { LinearGradient } from "expo-linear-gradient";
+import { Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
 
 import Login from "./src/screens/login/Login";
 
@@ -10,6 +13,7 @@ import Administradores from "./src/screens/admin/Administradores";
 import HomeAdmin from "./src/screens/admin/HomeAdmin";
 import RegistrarSucursalesAdmin from "./src/screens/admin/RegistrarSucursalesAdmin";
 import SucursalesAdmin from "./src/screens/admin/SucursalesAdmin";
+import TareasAdmin from "./src/screens/admin/TareasAdmin";
 // Gestor
 import HomeGestor from "./src/screens/gestor/HomeGestor";
 import RegistrarTareasGestor from "./src/screens/gestor/RegistrarTareasGestor";
@@ -35,12 +39,30 @@ export default function App() {
         <Stack.Screen name="GestorTabs" component={GestorScreens} options={{ headerShown: false }} />
         <Stack.Screen name="TecnicoTabs" component={TecnicoScreens} options={{ headerShown: false }} />
         <Stack.Screen name="RegistrarTareas" component={RegistrarTareasGestor} options={{
-          headerTitle: "",
-          headerStyle: {
-            backgroundColor: "#618ccfff",
-            height: 80,
-          },
-          headerTintColor: "#fff",
+          header: ({ navigation, back }) => (
+            <LinearGradient
+              colors={["#87aef0", "#9c8fc4"]}
+              start={{ x: 0.5, y: 0.4 }}
+              end={{ x: 0.5, y: 1 }}
+              style={{
+                height: 160,
+                paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 40,
+                paddingHorizontal: 10,
+                justifyContent: "center",
+              }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                {back && (
+                  <TouchableOpacity onPress={navigation.goBack} style={{ padding: 4 }}>
+                    <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+                  </TouchableOpacity>
+                )}
+              </View>
+              <Text style={{ color: "#FFFFFF", fontSize: 26, fontWeight: 900, marginTop: 10, paddingLeft: 10 }}>
+                Agregar Tarea
+              </Text>
+            </LinearGradient>
+          ),
         }} />
         <Stack.Screen name="RegistrarSucursales" component={RegistrarSucursalesAdmin}
           options={{
@@ -72,7 +94,8 @@ function AdminScreens() {
     <Tab.Navigator screenOptions={{ headerShown: false }}>
       <Tab.Screen name="Home" component={HomeAdmin} />
       <Tab.Screen name="Sucursales" component={SucursalesAdmin} />
-      <Tab.Screen name="Admins" component={Administradores} />
+      <Tab.Screen name="Tareas" component={TareasAdmin} />
+      <Tab.Screen name="Usuarios" component={Administradores} />
       <Tab.Screen name="Profile" component={PerfilShared} />
     </Tab.Navigator>
   );
