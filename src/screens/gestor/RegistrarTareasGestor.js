@@ -1,11 +1,93 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Fontisto from '@expo/vector-icons/Fontisto';
-import { useState } from "react";
+import { collection, doc, getDoc, getDocs, getFirestore, query, setDoc, updateDoc, where } from "firebase/firestore";
+import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import DropDownPicker from "react-native-dropdown-picker";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import appFirebase from '../../credenciales/Credenciales';
+
 
 const RegistrarTareasGestor = () => {
+    const db = getFirestore(appFirebase);
+
+    const [contadorTarea, setContadorTarea] = useState([])
+
+    const getContadorTarea = async () => {
+        try {
+            const docRef = doc(db, "contador", "tarea");
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                return docSnap.data().cantidad;
+            } else {
+                console.log("Documento 'tarea' no existe");
+                return 0;
+            }
+        } catch (error) {
+            console.error("Error obteniendo contador de tareas:", error);
+            return 0;
+        }
+    };
+
+    useEffect(() => {
+        getContadorTarea();
+    }, []);
+
+    const saveTareas = async () => {
+        try {
+            const contadorActual = await getContadorTarea();
+            const nuevoNumero = contadorActual + 1;
+
+            const docRef = doc(db, "TAREA", nuevoNumero.toString());
+
+            await setDoc(docRef, {
+                nombre,
+                descripcion,
+                fechaCreacion: new Date(),
+                prioridad: valuePrioridad,
+                fechaEntrega: selectedDate.toISOString(),
+                estado: "Pendiente",
+            });
+
+            const contadorRef = doc(db, "contador", "tarea");
+            await updateDoc(contadorRef, { cantidad: nuevoNumero });
+
+            alert("Tarea creada correctamente");
+
+            setNombre("");
+            setDescripcion("");
+            setValuePrioridad(null);
+            setSelectedDate(null);
+
+        } catch (error) {
+            console.error("Error creando tarea:", error);
+            alert("Error al crear la tarea");
+        }
+    };
+
+    const [openSucursal, setOpenSucursal] = useState(false);
+    const [valueSucursal, setValueSucursal] = useState(null);
+    const [sucursal, setSucursal] = useState([]);
+    const obtenerSucursales = async () => {
+        try {
+            const querySnapshot = await getDocs(collection(db, "SUCURSAL"));
+            const data = querySnapshot.docs.map(doc => ({
+                label: doc.data().nombre,
+                value: doc.id, // <-- string correcto
+            }));
+            setSucursal(data);
+
+        } catch (error) {
+            console.error("Error obteniendo sucursales:", error);
+        }
+    };
+
+    // Cargar una vez al montar
+    useEffect(() => {
+        obtenerSucursales();
+    }, []);
+
     const [nombre, setNombre] = useState("");
     const [descripcion, setDescripcion] = useState("");
 
@@ -17,21 +99,66 @@ const RegistrarTareasGestor = () => {
         { label: "🔴 Alta", value: "Alta" },
     ]);
 
-    const [openSucursal, setOpenSucursal] = useState(false);
-    const [valueSucursal, setValueSucursal] = useState(null);
-    const [sucursal, setSucursal] = useState([
-        { label: "Zona Centro", value: "Zona Centro" },
-        { label: "KFC", value: "KFC" },
-        { label: "RFC", value: "RFC" },
-    ]);
-
     const [openTecnicos, setOpenTecnicos] = useState(false);
     const [valueTecnicos, setValueTecnicos] = useState(null);
-    const [tecnicos, setTecnicos] = useState([
-        { label: "Elias Jair Gomez Cueva", value: "Elias Jair Gomez Cueva" },
-        { label: "Mario Yair Morales Anacleto", value: "Mario Yair Morales Anacleto" },
-        { label: "Luis Ignacio Diaz Reyes", value: "Luis Ignacio Diaz Reyes" },
-    ]);
+    const [tecnicos, setTecnicos] = useState([]);
+
+    const obtenerTecnicos = async (sucursalId) => {
+        try {
+            if (!sucursalId) {
+                setTecnicos([]);
+                return;
+            }
+
+            const q = query(
+                collection(db, "USUARIO_SUCURSAL"),
+                where("IDSucursal", "==", sucursalId) // string
+            );
+
+            const snap = await getDocs(q);
+            if (snap.empty) {
+                setTecnicos([]);
+                return;
+            }
+
+            const tecnicosData = [];
+
+            for (let docSnap of snap.docs) {
+                const usuarioId = docSnap.data().IDUsuario; // ID string del usuario
+
+                // 2. Obtener el usuario desde la colección USUARIO
+                const usuarioDoc = await getDoc(doc(db, "USUARIO", usuarioId));
+                if (usuarioDoc.exists()) {
+                    const usuario = usuarioDoc.data();
+
+                    // 3. Filtrar solo técnicos
+                    if (usuario.rol === "Tecnico") {
+                        const nombreCompleto = `${usuario.primerNombre ?? ""} ${usuario.segundoNombre ?? ""} ${usuario.primerApell ?? ""} ${usuario.segundoApell ?? ""}`.trim();
+
+                        tecnicosData.push({
+                            label: nombreCompleto,
+                            value: usuarioDoc.id, // <-- string correcto
+                        });
+
+                    }
+                }
+            }
+
+            // 4. Actualizar el estado
+            setTecnicos(tecnicosData);
+        } catch (error) {
+            console.error("Error obteniendo técnicos:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (valueSucursal) {
+            obtenerTecnicos(valueSucursal); // pasa el string
+        } else {
+            setTecnicos([]);
+        }
+    }, [valueSucursal]);
+
 
     const [isVisible, setIsVisible] = useState(false);
     const [mode, setMode] = useState("datetime");
@@ -55,11 +182,13 @@ const RegistrarTareasGestor = () => {
                     <Text style={styles.titulo}>Datos de la Tarea</Text>
                     <TextInput style={styles.input}
                         placeholder='Nombre'
+                        placeholderTextColor={"#606368"}
                         value={nombre}
                         onChangeText={setNombre}
                     />
                     <TextInput style={[styles.input, styles.descripcion]}
                         placeholder='Descripción'
+                        placeholderTextColor={"#606368"}
                         multiline={true}
                         textAlignVertical="top"
                         value={descripcion}
@@ -81,7 +210,7 @@ const RegistrarTareasGestor = () => {
                             backgroundColor: "#fff",
                             borderRadius: 8,
                         }}
-                        placeholderStyle={{ color: "#999" }}
+                        placeholderStyle={{ color: "#606368" }}
                     />
 
                     <TouchableOpacity onPress={() => setIsVisible(true)} style={styles.input}>
@@ -91,7 +220,7 @@ const RegistrarTareasGestor = () => {
                             alignItems: "center",
                         }}>
                             <View>
-                                <Text style={{ color: selectedDate ? "#000" : "#999" }}>
+                                <Text style={{ color: selectedDate ? "#000" : "#606368" }}>
                                     {selectedDate ? selectedDate.toLocaleString() : "Selecciona fecha y hora"}
                                 </Text>
                             </View>
@@ -113,7 +242,7 @@ const RegistrarTareasGestor = () => {
                     <DropDownPicker
                         open={openSucursal}
                         value={valueSucursal}
-                        items={sucursal}
+                        items={sucursal || []}
                         setOpen={setOpenSucursal}
                         setValue={setValueSucursal}
                         setItems={setSucursal}
@@ -126,7 +255,7 @@ const RegistrarTareasGestor = () => {
                             backgroundColor: "#fff",
                             borderRadius: 8,
                         }}
-                        placeholderStyle={{ color: "#999" }}
+                        placeholderStyle={{ color: "#606368" }}
                     />
                 </View>
                 <View style={{ marginTop: 20 }}>
@@ -136,7 +265,7 @@ const RegistrarTareasGestor = () => {
                             <DropDownPicker
                                 open={openTecnicos}
                                 value={valueTecnicos}
-                                items={tecnicos}
+                                items={tecnicos || []}
                                 setOpen={setOpenTecnicos}
                                 setValue={setValueTecnicos}
                                 setItems={setTecnicos}
@@ -160,7 +289,7 @@ const RegistrarTareasGestor = () => {
                                     backgroundColor: "#fff",
                                     borderRadius: 8,
                                 }}
-                                placeholderStyle={{ color: "#999" }}
+                                placeholderStyle={{ color: "#606368" }}
                             />
                         </View>
                         <View style={{ marginTop: 15 }}>
@@ -172,6 +301,7 @@ const RegistrarTareasGestor = () => {
             <View>
                 <TouchableOpacity
                     style={styles.botonSumit}
+                    onPress={saveTareas}
                 >
                     <Text style={{ color: 'white', fontWeight: 800, fontSize: 20 }}>Crear Tarea</Text>
                 </TouchableOpacity>
@@ -191,6 +321,7 @@ const styles = StyleSheet.create({
         fontWeight: 700,
     },
     input: {
+        color: "black",
         marginTop: 15,
         borderWidth: 2,
         borderColor: "#F2F3F5",

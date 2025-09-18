@@ -7,7 +7,6 @@ import {
     FIREBASE_PROJECT_ID,
     FIREBASE_STORAGE_BUCKET
 } from "@env";
-import { getAnalytics } from "firebase/analytics";
 import { initializeApp } from "firebase/app";
 
 const firebaseConfig = {
@@ -20,5 +19,6 @@ const firebaseConfig = {
     measurementId: FIREBASE_MEASUREMENT_ID
 };
 
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+const appFirebase = initializeApp(firebaseConfig);
+
+export default appFirebase
