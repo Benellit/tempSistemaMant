@@ -329,7 +329,7 @@ const RegistrarTareasGestor = () => {
                                 backgroundColor: "#fff",
                                 borderRadius: 8,
                             }}
-                            placeholderStyle={{ color: "#606368" }}
+                            placeholderStyle={{ color: "#606368", fontSize: 16 }}
                             zIndex={1000}
                             zIndexInverse={3000}
                             onOpen={handleOpenPrioridad}
@@ -345,7 +345,7 @@ const RegistrarTareasGestor = () => {
                                 alignItems: "center",
                             }}>
                                 <View>
-                                    <Text style={{ color: selectedDate ? "#000" : "#606368" }}>
+                                    <Text style={{ fontSize: 16, color: selectedDate ? "#000" : "#606368" }}>
                                         {selectedDate ? selectedDate.toLocaleString() : "Selecciona fecha y hora"}
                                     </Text>
                                 </View>
@@ -385,7 +385,7 @@ const RegistrarTareasGestor = () => {
                                 backgroundColor: "#fff",
                                 borderRadius: 8,
                             }}
-                            placeholderStyle={{ color: "#606368" }}
+                            placeholderStyle={{ color: "#606368", fontSize: 16 }}
                             zIndex={100}
                             zIndexInverse={100}
                             onOpen={handleOpenSucursal}
@@ -434,7 +434,6 @@ const RegistrarTareasGestor = () => {
                     <View>
                         {arrayValueTecnicos.map((tecnico, index) => (
                             <View key={tecnico.value || index} style={{ flexDirection: "row" }}>
-                                {/* Caja principal */}
                                 <View
                                     style={{
                                         backgroundColor: "#8BA7E6",
@@ -447,12 +446,10 @@ const RegistrarTareasGestor = () => {
                                         flexDirection: "row",
                                     }}
                                 >
-                                    {/* Foto */}
                                     <Image
                                         style={{ width: 40, height: 40, borderRadius: 100 }}
                                         source={{ uri: tecnico.fotoPerfil }}
                                     />
-                                    {/* Nombre */}
                                     <View style={{ justifyContent: "center", paddingLeft: 10 }}>
                                         <Text style={{ color: "white", fontWeight: "500", fontSize: 16 }}>
                                             {`${tecnico.primerNombre} ${tecnico.segundoNombre} ${tecnico.primerApellido} ${tecnico.segundoApellido}`}
@@ -500,7 +497,7 @@ const RegistrarTareasGestor = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingHorizontal: 20,
+        paddingHorizontal: 15,
         backgroundColor: "#FFFFFF"
     },
     titulo: {
@@ -517,7 +514,8 @@ const styles = StyleSheet.create({
         padding: 4,
         zIndex: 200,
         fontWeight: 700,
-        color: "#898C91"
+        color: "#898C91",
+        fontSize: 16
     },
     input: {
         color: "black",
@@ -526,8 +524,9 @@ const styles = StyleSheet.create({
         borderColor: "#F2F3F5",
         borderRadius: 8,
         paddingLeft: 12,
-        height: 50,
-        justifyContent: "center"
+        height: 60,
+        justifyContent: "center",
+        fontSize: 16
     },
     descripcion: {
         height: 90,
@@ -553,7 +552,7 @@ const styles = StyleSheet.create({
         color: "white",
         borderTopRightRadius: 8,
         borderBottomRightRadius: 8,
-        height: 50,
+        height: 60,
         justifyContent: "center"
     }
 });

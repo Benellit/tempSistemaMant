@@ -31,13 +31,6 @@ function BottomTabNavigator() {
 }
 
 const styles = StyleSheet.create({
-    bottomContainer: {
-        backgroundColor: "white",
-        paddingBottom: 5,
-        borderRadius: 5,
-        borderTopColor: "#f0f0f0",
-        borderTopWidth: 1,
-    },
     floatingButton: {
         position: "absolute",
         bottom: 40,
