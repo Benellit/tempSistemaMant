@@ -148,20 +148,21 @@ export default function TareasAdmin({ navigation }) {
             colors={["#87aef0", "#9c8fc4"]}
             start={{ x: 0.5, y: 0.4 }}
             end={{ x: 0.5, y: 1 }}
-            style={{
-                flex: 1,
-            }}
+            style={{ flex: 1 }}
         >
-            <ScrollView
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }
-            >
-                <View style={{ paddingTop: 40, paddingHorizontal: 15, paddingBottom: 20, backgroundColor: "white" }}>
+            <View style={{ flex: 1 }}>
+                {/* Header */}
+                <View style={{
+                    paddingTop: 15, paddingHorizontal: 15, paddingBottom: 20, backgroundColor: "white", shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 5,
+                    elevation: 6,
+                    borderBottomWidth: 2,
+                    borderColor: "#D9D9D9"
+                }}>
                     <View>
-                        <Text style={styles.titulo}>
-                            Tareas
-                        </Text>
+                        <Text style={styles.titulo}>Tareas</Text>
                     </View>
                     <View style={{ flexDirection: "row", gap: 10 }}>
                         <View style={{ marginBottom: 0, marginTop: 10, flex: 1 }}>
@@ -183,7 +184,17 @@ export default function TareasAdmin({ navigation }) {
                     </View>
                 </View>
 
-                <View style={{ paddingHorizontal: 15, padding: 10 }}>
+                <ScrollView
+                    style={{
+                        flex: 1,
+                        paddingHorizontal: 15,
+                        paddingVertical: 5,
+
+                    }}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    }
+                >
                     {tareas.map((tarea) => (
                         <TouchableOpacity key={tarea.id} style={{ backgroundColor: "white", borderRadius: 8, paddingHorizontal: 15, paddingVertical: 10, marginBottom: 10, elevation: 30 }}>
                             <View>
@@ -245,10 +256,10 @@ export default function TareasAdmin({ navigation }) {
                             </View>
                         </TouchableOpacity>
                     ))}
-                </View>
-            </ScrollView>
-            <View>
+                </ScrollView>
+
                 <BotonRegistrar />
+
             </View>
         </LinearGradient>
     );

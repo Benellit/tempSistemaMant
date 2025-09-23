@@ -11,10 +11,13 @@ function BottomTabNavigator() {
     useFocusEffect(() => {
         setActiveTab(route.name);
     });
+
+    // Solo muestra el botón si es necesario (ej: en "Tareas")
+    const shouldShowButton = activeTab === "Sucursales" || activeTab === "Tareas" || activeTab === "Usuarios";
+
     return (
         <View style={styles.bottomContainer}>
-            {/* Mostrara el + en caso de estar en una de estas pantallas */}
-            {(activeTab === "Sucursales" || activeTab === "Tareas" || activeTab === "Usuarios") && (
+            {shouldShowButton && (
                 <TouchableOpacity
                     style={styles.floatingButton}
                     onPress={() => {
@@ -33,7 +36,7 @@ function BottomTabNavigator() {
 const styles = StyleSheet.create({
     floatingButton: {
         position: "absolute",
-        bottom: 40,
+        bottom: 40,  // Distancia desde el fondo del contenedor
         right: 25,
         backgroundColor: "#3c67bd",
         width: 60,

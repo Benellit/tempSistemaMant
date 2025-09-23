@@ -85,9 +85,10 @@ function AppStack() {
               start={{ x: 0.5, y: 0.4 }}
               end={{ x: 0.5, y: 1 }}
               style={{
-                height: 160,
+                height: 120,
                 paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 40,
                 paddingHorizontal: 10,
+                paddingVertical: 10,
                 justifyContent: "center",
               }}
             >
@@ -98,7 +99,7 @@ function AppStack() {
                   </TouchableOpacity>
                 )}
               </View>
-              <Text style={{ color: "#FFFFFF", fontSize: 26, fontWeight: 900, marginTop: 10, paddingLeft: 10 }}>
+              <Text style={{ color: "#FFFFFF", fontSize: 26, fontWeight: 900, paddingLeft: 10, paddingBottom: 20 }}>
                 Agregar Tarea
               </Text>
             </LinearGradient>
@@ -134,12 +135,43 @@ function RoleTabs() {
 
   if (profile?.rol === "Administrador") return <AdminScreens />;
   if (profile?.rol === "Gestor")       return <GestorScreens />;
-  return <TecnicoScreens />; // default
+  if (profile?.rol === "Tecnico")       return <TecnicoScreens />;
 }
 
 function AdminScreens() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          switch (route.name) {
+            case 'Home':
+              iconName = focused ? 'home' : 'home-outline';
+              break;
+            case 'Sucursales':
+              iconName = focused ? 'business' : 'business-outline';
+              break;
+            case 'Tareas':
+              iconName = focused ? 'reader' : 'reader-outline';
+              break;
+            case 'Usuarios':
+              iconName = focused ? 'people' : 'people-outline';
+              break;
+            case 'Profile':
+              iconName = focused ? 'person' : 'person-outline';
+              break;
+            default:
+              iconName = 'ellipse';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#007AFF',
+        tabBarInactiveTintColor: 'gray',
+      })}
+    >
       <Tab.Screen name="Home"       component={HomeAdmin} />
       <Tab.Screen name="Sucursales" component={SucursalesAdmin} />
       <Tab.Screen name="Tareas"     component={TareasAdmin} />
@@ -151,7 +183,28 @@ function AdminScreens() {
 
 function GestorScreens() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Tareas') {
+            iconName = focused ? 'reader' : 'reader-outline';
+          } else if (route.name === 'Usuarios') {
+            iconName = focused ? 'people' : 'people-outline';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#007AFF',
+        tabBarInactiveTintColor: 'gray',
+      })}
+    >
       <Tab.Screen name="Home"     component={HomeGestor} />
       <Tab.Screen name="Tareas"   component={TareasShared} />
       <Tab.Screen name="Usuarios" component={UsuariosGestor} />
@@ -162,7 +215,32 @@ function GestorScreens() {
 
 function TecnicoScreens() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          switch (route.name) {
+            case 'Home':
+              iconName = focused ? 'home' : 'home-outline';
+              break;
+            case 'Tareas':
+              iconName = focused ? 'reader' : 'reader-outline';
+              break;
+            case 'Profile':
+              iconName = focused ? 'person' : 'person-outline';
+              break;
+            default:
+              iconName = 'ellipse';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#007AFF',
+        tabBarInactiveTintColor: 'gray',
+      })}
+    >
       <Tab.Screen name="Home"    component={HomeTecnico} />
       <Tab.Screen name="Tareas"  component={TareasShared} />
       <Tab.Screen name="Profile" component={PerfilShared} />

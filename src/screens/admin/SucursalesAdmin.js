@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import BotonRegistrar from '../../components/BotonRegistrar';
 
+
 export default function SucursalesAdmin({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
 
@@ -21,10 +22,6 @@ export default function SucursalesAdmin({ navigation }) {
                 }
             >
                 <Text>Sucursales del sistema</Text>
-                <Button
-                    title="Sucursal Zona Centro"
-                    onPress={() => navigation.navigate("GestorTabs")}
-                />
             </ScrollView>
 
             <View>

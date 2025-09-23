@@ -1,15 +1,22 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Fontisto from '@expo/vector-icons/Fontisto';
+import { useNavigation } from "@react-navigation/native";
 import { collection, doc, getDoc, getDocs, getFirestore, query, setDoc, updateDoc, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import DropDownPicker from "react-native-dropdown-picker";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import appFirebase from '../../credenciales/Credenciales';
+import { useAuth } from "../login/AuthContext";
 
-
-const RegistrarTareasGestor = () => {
+const RegistrarTareasGestor = (navigation, back) => {
     const db = getFirestore(appFirebase);
+    navigation = useNavigation();
+    const { profile } = useAuth();
+
+    if (profile?.rol === "Tecnico") {
+        navigation.navigate("Tabs");
+    }
 
     // CANTIDAD DE TAREAS
     const [contadorTarea, setContadorTarea] = useState([])
@@ -287,209 +294,240 @@ const RegistrarTareasGestor = () => {
     };
 
     return (
-        <View style={styles.container}>
-            <ScrollView nestedScrollEnabled={true}>
-                <View>
-                    <Text style={[styles.titulo, { paddingTop: 20 }]}>Datos de la Tarea</Text>
-                    <View style={styles.containerInputs}>
-                        <Text style={styles.label}>Nombre</Text>
-                        <TextInput style={styles.input}
-                            placeholder='Escribe el nombre'
-                            placeholderTextColor={"#606368"}
-                            value={nombre}
-                            onChangeText={setNombre}
-                        />
-                    </View>
-                    <View style={styles.containerInputs}>
-                        <Text style={styles.label}>Descripción</Text>
-                        <TextInput style={[styles.input, styles.descripcion]}
-                            placeholder='Escribe la descripción'
-                            placeholderTextColor={"#606368"}
-                            multiline={true}
-                            textAlignVertical="top"
-                            value={descripcion}
-                            onChangeText={setDescripcion}
-                        />
-                    </View>
-                    <View style={styles.containerInputs}>
-                        <Text style={styles.label}>Prioridad</Text>
-                        <DropDownPicker
-                            open={openPrioridad}
-                            value={valuePrioridad}
-                            items={prioridad}
-                            setOpen={setOpenPrioridad}
-                            setValue={setValuePrioridad}
-                            setItems={setPrioridad}
-                            placeholder="Selecciona prioridad"
-                            style={[styles.input, styles.box]}
-                            listMode="SCROLLVIEW"
-                            dropDownContainerStyle={{
-                                borderColor: "#F2F3F5",
-                                borderWidth: 2,
-                                backgroundColor: "#fff",
-                                borderRadius: 8,
-                            }}
-                            placeholderStyle={{ color: "#606368", fontSize: 16 }}
-                            zIndex={1000}
-                            zIndexInverse={3000}
-                            onOpen={handleOpenPrioridad}
-                        />
+        <View style={{ flex: 1 }}>
+            {/* <LinearGradient
+                colors={["#87aef0", "#9c8fc4"]}
+                start={{ x: 0.5, y: 0.4 }}
+                end={{ x: 0.5, y: 1 }}
+                style={{
+                    flex: 1,
+                }}
+            >
+                <View style={{ backgroundColor: "#1E1E1E", padding: 10 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        {back ? (
+                            <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
+                                <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+                            </TouchableOpacity>
+                        ) : null}
                     </View>
 
-                    <View style={styles.containerInputs}>
-                        <Text style={styles.label}>Fecha de entrega</Text>
-                        <TouchableOpacity onPress={() => setIsVisible(true)} style={styles.input}>
-                            <View style={{
-                                flexDirection: "row",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                            }}>
-                                <View>
-                                    <Text style={{ fontSize: 16, color: selectedDate ? "#000" : "#606368" }}>
-                                        {selectedDate ? selectedDate.toLocaleString() : "Selecciona fecha y hora"}
-                                    </Text>
-                                </View>
-                                <View style={{ marginRight: 10 }}>
-                                    <Fontisto name="date" size={20} color="black" />
-                                </View>
-                            </View>
-                        </TouchableOpacity>
-
-                        <DateTimePickerModal
-                            isVisible={isVisible}
-                            mode={mode}
-                            onConfirm={handleConfirm}
-                            onCancel={() => setIsVisible(false)}
-                            minimumDate={new Date()}
-                            style={styles.input}
-                            zIndex={500}
-                            zIndexInverse={1500}
-                        />
-                    </View>
-
-                    <View style={styles.containerInputs}>
-                        <Text style={styles.label}>Sucursal</Text>
-                        <DropDownPicker
-                            open={openSucursal}
-                            value={valueSucursal}
-                            items={sucursal}
-                            setOpen={setOpenSucursal}
-                            setValue={setValueSucursal}
-                            setItems={setSucursal}
-                            placeholder="Selecciona sucursal"
-                            style={styles.input}
-                            listMode="SCROLLVIEW"
-                            dropDownContainerStyle={{
-                                borderColor: "#F2F3F5",
-                                borderWidth: 2,
-                                backgroundColor: "#fff",
-                                borderRadius: 8,
-                            }}
-                            placeholderStyle={{ color: "#606368", fontSize: 16 }}
-                            zIndex={100}
-                            zIndexInverse={100}
-                            onOpen={handleOpenSucursal}
-                        />
-                    </View>
+                    <Text
+                        style={{
+                            color: "#FFFFFF",
+                            fontSize: 26,
+                            fontWeight: "900",
+                            marginTop: 10,
+                            paddingLeft: 10,
+                        }}
+                    >
+                        Agregar Tarea
+                    </Text>
                 </View>
-                <View style={{ marginTop: 20 }}>
-                    <Text style={styles.titulo}>Asignación de la Tarea</Text>
-                    <View style={{ flexDirection: "row" }}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={[styles.label, { zIndex: 20 }]}>Asignación</Text>
+            </LinearGradient> */}
+            <View style={styles.container}>
+                <ScrollView style={{ paddingHorizontal: 15 }} nestedScrollEnabled={true}>
+                    <View>
+                        <Text style={[styles.titulo, { paddingTop: 20 }]}>Datos de la Tarea</Text>
+                        <View style={styles.containerInputs}>
+                            <Text style={styles.label}>Nombre</Text>
+                            <TextInput style={styles.input}
+                                placeholder='Escribe el nombre'
+                                placeholderTextColor={"#606368"}
+                                value={nombre}
+                                onChangeText={setNombre}
+                            />
+                        </View>
+                        <View style={styles.containerInputs}>
+                            <Text style={styles.label}>Descripción</Text>
+                            <TextInput style={[styles.input, styles.descripcion]}
+                                placeholder='Escribe la descripción'
+                                placeholderTextColor={"#606368"}
+                                multiline={true}
+                                textAlignVertical="top"
+                                value={descripcion}
+                                onChangeText={setDescripcion}
+                            />
+                        </View>
+                        <View style={styles.containerInputs}>
+                            <Text style={styles.label}>Prioridad</Text>
                             <DropDownPicker
-                                open={openTecnicos}
-                                value={valueTecnicos}
-                                items={tecnicosDisponibles}
-                                setOpen={setOpenTecnicos}
-                                setValue={setValueTecnicos}
-                                placeholder="Selecciona técnico"
-                                style={[styles.input, styles.inputTecnicos]}
+                                open={openPrioridad}
+                                value={valuePrioridad}
+                                items={prioridad}
+                                setOpen={setOpenPrioridad}
+                                setValue={setValuePrioridad}
+                                setItems={setPrioridad}
+                                placeholder="Selecciona prioridad"
+                                style={[styles.input, styles.box]}
                                 listMode="SCROLLVIEW"
-                                searchable={true}
-                                searchPlaceholder="Buscar técnico"
-                                searchContainerStyle={{
-                                    borderBottomColor: "#ccc",
-                                    borderBottomWidth: 1,
-                                }}
-                                searchTextInputStyle={{
-                                    height: 40,
-                                    fontSize: 16,
-                                }}
-                                zIndex={1}
                                 dropDownContainerStyle={{
                                     borderColor: "#F2F3F5",
                                     borderWidth: 2,
                                     backgroundColor: "#fff",
                                     borderRadius: 8,
                                 }}
-                                placeholderStyle={{ color: "#606368" }}
-                                onOpen={handleOpenTecnicos}
+                                placeholderStyle={{ color: "#606368", fontSize: 16 }}
+                                zIndex={1000}
+                                zIndexInverse={3000}
+                                onOpen={handleOpenPrioridad}
                             />
                         </View>
-                        <View style={{ marginTop: 15 }}>
-                            <TouchableOpacity style={styles.masTecnicos} onPress={acomodarArrayConTecnicos}><AntDesign name="plus" size={20} color="white" /></TouchableOpacity>
-                        </View>
-                    </View>
-                    <View>
-                        {arrayValueTecnicos.map((tecnico, index) => (
-                            <View key={tecnico.value || index} style={{ flexDirection: "row" }}>
-                                <View
-                                    style={{
-                                        backgroundColor: "#8BA7E6",
-                                        borderTopLeftRadius: 11,
-                                        borderBottomLeftRadius: 11,
-                                        paddingLeft: 12,
-                                        paddingVertical: 6,
-                                        marginTop: 10,
-                                        flex: 1,
-                                        flexDirection: "row",
-                                    }}
-                                >
-                                    <Image
-                                        style={{ width: 40, height: 40, borderRadius: 100 }}
-                                        source={{ uri: tecnico.fotoPerfil }}
-                                    />
-                                    <View style={{ justifyContent: "center", paddingLeft: 10 }}>
-                                        <Text style={{ color: "white", fontWeight: "500", fontSize: 16 }}>
-                                            {`${tecnico.primerNombre} ${tecnico.segundoNombre} ${tecnico.primerApellido} ${tecnico.segundoApellido}`}
+
+                        <View style={styles.containerInputs}>
+                            <Text style={styles.label}>Fecha de entrega</Text>
+                            <TouchableOpacity onPress={() => setIsVisible(true)} style={styles.input}>
+                                <View style={{
+                                    flexDirection: "row",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                }}>
+                                    <View>
+                                        <Text style={{ fontSize: 16, color: selectedDate ? "#000" : "#606368" }}>
+                                            {selectedDate ? selectedDate.toLocaleString() : "Selecciona fecha y hora"}
                                         </Text>
                                     </View>
+                                    <View style={{ marginRight: 10 }}>
+                                        <Fontisto name="date" size={20} color="black" />
+                                    </View>
                                 </View>
+                            </TouchableOpacity>
 
-                                {/* Botón eliminar */}
-                                <TouchableOpacity
-                                    onPress={() =>
-                                        setArrayValueTecnicos((prev) =>
-                                            prev.filter((t) => t.value !== tecnico.value)
-                                        )
-                                    }
-                                    style={{
-                                        marginTop: 10,
-                                        justifyContent: "center",
-                                        alignItems: "center",
-                                        backgroundColor: "#9c8fc4",
-                                        padding: 8,
-                                        borderTopRightRadius: 8,
-                                        borderBottomRightRadius: 8,
+                            <DateTimePickerModal
+                                isVisible={isVisible}
+                                mode={mode}
+                                onConfirm={handleConfirm}
+                                onCancel={() => setIsVisible(false)}
+                                minimumDate={new Date()}
+                                style={styles.input}
+                                zIndex={500}
+                                zIndexInverse={1500}
+                            />
+                        </View>
+
+                        <View style={styles.containerInputs}>
+                            <Text style={styles.label}>Sucursal</Text>
+                            <DropDownPicker
+                                open={openSucursal}
+                                value={valueSucursal}
+                                items={sucursal}
+                                setOpen={setOpenSucursal}
+                                setValue={setValueSucursal}
+                                setItems={setSucursal}
+                                placeholder="Selecciona sucursal"
+                                style={styles.input}
+                                listMode="SCROLLVIEW"
+                                dropDownContainerStyle={{
+                                    borderColor: "#F2F3F5",
+                                    borderWidth: 2,
+                                    backgroundColor: "#fff",
+                                    borderRadius: 8,
+                                }}
+                                placeholderStyle={{ color: "#606368", fontSize: 16 }}
+                                zIndex={100}
+                                zIndexInverse={100}
+                                onOpen={handleOpenSucursal}
+                            />
+                        </View>
+                    </View>
+                    <View style={{ marginTop: 20 }}>
+                        <Text style={styles.titulo}>Asignación de la Tarea</Text>
+                        <View style={{ flexDirection: "row" }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={[styles.label, { zIndex: 20 }]}>Asignación</Text>
+                                <DropDownPicker
+                                    open={openTecnicos}
+                                    value={valueTecnicos}
+                                    items={tecnicosDisponibles}
+                                    setOpen={setOpenTecnicos}
+                                    setValue={setValueTecnicos}
+                                    placeholder="Selecciona técnico"
+                                    style={[styles.input, styles.inputTecnicos]}
+                                    listMode="SCROLLVIEW"
+                                    searchable={true}
+                                    searchPlaceholder="Buscar técnico"
+                                    searchContainerStyle={{
+                                        borderBottomColor: "#ccc",
+                                        borderBottomWidth: 1,
                                     }}
-                                >
-                                    <AntDesign name="close" size={20} color="white" />
-                                </TouchableOpacity>
+                                    searchTextInputStyle={{
+                                        height: 40,
+                                        fontSize: 16,
+                                    }}
+                                    zIndex={1}
+                                    dropDownContainerStyle={{
+                                        borderColor: "#F2F3F5",
+                                        borderWidth: 2,
+                                        backgroundColor: "#fff",
+                                        borderRadius: 8,
+                                    }}
+                                    placeholderStyle={{ color: "#606368" }}
+                                    onOpen={handleOpenTecnicos}
+                                />
                             </View>
-                        ))}
-                    </View>
-                    <View style={{ paddingTop: 15 }}>
-                        <TouchableOpacity
-                            style={[styles.botonSumit, loading && { opacity: 0.1 }]}
-                            onPress={saveTareas}
-                        >
-                            <Text style={{ color: 'white', fontWeight: 800, fontSize: 20 }}>Crear Tarea</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </ScrollView>
+                            <View style={{ marginTop: 15 }}>
+                                <TouchableOpacity style={styles.masTecnicos} onPress={acomodarArrayConTecnicos}><AntDesign name="plus" size={20} color="white" /></TouchableOpacity>
+                            </View>
+                        </View>
+                        <View>
+                            {arrayValueTecnicos.map((tecnico, index) => (
+                                <View key={tecnico.value || index} style={{ flexDirection: "row" }}>
+                                    <View
+                                        style={{
+                                            backgroundColor: "#8BA7E6",
+                                            borderTopLeftRadius: 11,
+                                            borderBottomLeftRadius: 11,
+                                            paddingLeft: 12,
+                                            paddingVertical: 6,
+                                            marginTop: 10,
+                                            flex: 1,
+                                            flexDirection: "row",
+                                        }}
+                                    >
+                                        <Image
+                                            style={{ width: 40, height: 40, borderRadius: 100 }}
+                                            source={{ uri: tecnico.fotoPerfil }}
+                                        />
+                                        <View style={{ justifyContent: "center", paddingLeft: 10 }}>
+                                            <Text style={{ color: "white", fontWeight: "500", fontSize: 16 }}>
+                                                {`${tecnico.primerNombre} ${tecnico.segundoNombre} ${tecnico.primerApellido} ${tecnico.segundoApellido}`}
+                                            </Text>
+                                        </View>
+                                    </View>
 
+                                    {/* Botón eliminar */}
+                                    <TouchableOpacity
+                                        onPress={() =>
+                                            setArrayValueTecnicos((prev) =>
+                                                prev.filter((t) => t.value !== tecnico.value)
+                                            )
+                                        }
+                                        style={{
+                                            marginTop: 10,
+                                            justifyContent: "center",
+                                            alignItems: "center",
+                                            backgroundColor: "#9c8fc4",
+                                            padding: 8,
+                                            borderTopRightRadius: 8,
+                                            borderBottomRightRadius: 8,
+                                        }}
+                                    >
+                                        <AntDesign name="close" size={20} color="white" />
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+                        </View>
+                        <View style={{ paddingVertical: 15, marginBottom: 20 }}>
+                            <TouchableOpacity
+                                style={[styles.botonSumit, loading && { opacity: 0.1 }]}
+                                onPress={saveTareas}
+                            >
+                                <Text style={{ color: 'white', fontWeight: 800, fontSize: 20 }}>Crear Tarea</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </ScrollView>
+            </View>
         </View>
     )
 }
@@ -497,8 +535,10 @@ const RegistrarTareasGestor = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingHorizontal: 15,
-        backgroundColor: "#FFFFFF"
+        backgroundColor: "#FFFFFF",
+        // borderTopLeftRadius: 45,
+        // borderTopRightRadius: 45,
+        // borderWidth: 2,
     },
     titulo: {
         fontSize: 18,

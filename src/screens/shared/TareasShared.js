@@ -1,9 +1,14 @@
 import { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import BotonRegistrar from '../../components/BotonRegistrar';
+import { useAuth } from "../login/AuthContext";
+
+import { useNavigation } from "@react-navigation/native";
 
 export default function TareasShared({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
+        navigation = useNavigation();
+        const { profile } = useAuth();
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -25,7 +30,7 @@ export default function TareasShared({ navigation }) {
             </ScrollView>
 
             <View>
-                <BotonRegistrar />
+                {profile?.rol !== "Tecnico" && <BotonRegistrar />}
             </View>
         </View>
     )
