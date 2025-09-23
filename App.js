@@ -3,11 +3,13 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
-import { Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
 
+// Contexto de auth
+import { AuthProvider, useAuth } from "./src/screens/login/AuthContext";
+
+// Screens
 import Login from "./src/screens/login/Login";
-
-// TODAS LAS PANTALLAS
 // Admin
 import Administradores from "./src/screens/admin/Administradores";
 import HomeAdmin from "./src/screens/admin/HomeAdmin";
@@ -19,7 +21,7 @@ import HomeGestor from "./src/screens/gestor/HomeGestor";
 import RegistrarTareasGestor from "./src/screens/gestor/RegistrarTareasGestor";
 import RegistrarUsuariosGestor from "./src/screens/gestor/RegistrarUsuariosGestor";
 import UsuariosGestor from "./src/screens/gestor/UsuariosGestor";
-// Tecnico
+// Técnico
 import HomeTecnico from "./src/screens/tecnico/HomeTecnico";
 // Shared
 import PerfilShared from "./src/screens/shared/PerfilShared";
@@ -28,17 +30,55 @@ import TareasShared from "./src/screens/shared/TareasShared";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+/* ===================== App Root ===================== */
+
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login" screenOptions={{
-        cardStyleInterpolator: () => ({ cardStyle: { opacity: 1 } })
-      }}>
-        <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
-        <Stack.Screen name="AdminTabs" component={AdminScreens} options={{ headerShown: false }} />
-        <Stack.Screen name="GestorTabs" component={GestorScreens} options={{ headerShown: false }} />
-        <Stack.Screen name="TecnicoTabs" component={TecnicoScreens} options={{ headerShown: false }} />
-        <Stack.Screen name="RegistrarTareas" component={RegistrarTareasGestor} options={{
+    <AuthProvider>
+      <NavigationContainer>
+        <Gate />
+      </NavigationContainer>
+    </AuthProvider>
+  );
+}
+
+/* ===================== Gate: Auth vs App ===================== */
+
+function Gate() {
+  const { loading, user } = useAuth();
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+  return user ? <AppStack /> : <AuthStack />;
+}
+
+/* ===================== Stacks ===================== */
+
+// Solo login (no navega a tabs aquí; eso lo decide Gate)
+function AuthStack() {
+  return (
+    <Stack.Navigator screenOptions={{ cardStyleInterpolator: () => ({ cardStyle: { opacity: 1 } }) }}>
+      <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
+    </Stack.Navigator>
+  );
+}
+
+// Stack principal: tabs por rol + pantallas de registro
+function AppStack() {
+  return (
+    <Stack.Navigator screenOptions={{ cardStyleInterpolator: () => ({ cardStyle: { opacity: 1 } }) }}>
+      {/* Los tabs dependen del rol */}
+      <Stack.Screen name="Tabs" component={RoleTabs} options={{ headerShown: false }} />
+
+      {/* Rutas de registro que usas desde los tabs */}
+      <Stack.Screen
+        name="RegistrarTareas"
+        component={RegistrarTareasGestor}
+        options={{
           header: ({ navigation, back }) => (
             <LinearGradient
               colors={["#87aef0", "#9c8fc4"]}
@@ -63,40 +103,48 @@ export default function App() {
               </Text>
             </LinearGradient>
           ),
-        }} />
-        <Stack.Screen name="RegistrarSucursales" component={RegistrarSucursalesAdmin}
-          options={{
-            headerTitle: "",
-            headerStyle: {
-              backgroundColor: "#618ccfff", // cambiar el color :)
-              height: 80,
-            },
-            headerTintColor: "#fff",
-          }}
-        />
-        <Stack.Screen name="RegistrarUsuarios" component={RegistrarUsuariosGestor}
-          options={{
-            headerTitle: "",
-            headerStyle: {
-              backgroundColor: "#618ccfff", // cambiar el color :)
-              height: 80,
-            },
-            headerTintColor: "#fff",
-          }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+        }}
+      />
+      <Stack.Screen
+        name="RegistrarSucursales"
+        component={RegistrarSucursalesAdmin}
+        options={{
+          headerTitle: "",
+          headerStyle: { backgroundColor: "#618ccfff", height: 80 },
+          headerTintColor: "#fff",
+        }}
+      />
+      <Stack.Screen
+        name="RegistrarUsuarios"
+        component={RegistrarUsuariosGestor}
+        options={{
+          headerTitle: "",
+          headerStyle: { backgroundColor: "#618ccfff", height: 80 },
+          headerTintColor: "#fff",
+        }}
+      />
+    </Stack.Navigator>
   );
+}
+
+/* ===================== Tabs por rol ===================== */
+
+function RoleTabs() {
+  const { profile } = useAuth(); // viene de Firestore USUARIO/{uid}
+
+  if (profile?.rol === "Administrador") return <AdminScreens />;
+  if (profile?.rol === "Gestor")       return <GestorScreens />;
+  return <TecnicoScreens />; // default
 }
 
 function AdminScreens() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }}>
-      <Tab.Screen name="Home" component={HomeAdmin} />
+      <Tab.Screen name="Home"       component={HomeAdmin} />
       <Tab.Screen name="Sucursales" component={SucursalesAdmin} />
-      <Tab.Screen name="Tareas" component={TareasAdmin} />
-      <Tab.Screen name="Usuarios" component={Administradores} />
-      <Tab.Screen name="Profile" component={PerfilShared} />
+      <Tab.Screen name="Tareas"     component={TareasAdmin} />
+      <Tab.Screen name="Usuarios"   component={Administradores} />
+      <Tab.Screen name="Profile"    component={PerfilShared} />
     </Tab.Navigator>
   );
 }
@@ -104,10 +152,10 @@ function AdminScreens() {
 function GestorScreens() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }}>
-      <Tab.Screen name="Home" component={HomeGestor} />
-      <Tab.Screen name="Tareas" component={TareasShared} />
+      <Tab.Screen name="Home"     component={HomeGestor} />
+      <Tab.Screen name="Tareas"   component={TareasShared} />
       <Tab.Screen name="Usuarios" component={UsuariosGestor} />
-      <Tab.Screen name="Profile" component={PerfilShared} />
+      <Tab.Screen name="Profile"  component={PerfilShared} />
     </Tab.Navigator>
   );
 }
@@ -115,8 +163,8 @@ function GestorScreens() {
 function TecnicoScreens() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }}>
-      <Tab.Screen name="Home" component={HomeTecnico} />
-      <Tab.Screen name="Tareas" component={TareasShared} />
+      <Tab.Screen name="Home"    component={HomeTecnico} />
+      <Tab.Screen name="Tareas"  component={TareasShared} />
       <Tab.Screen name="Profile" component={PerfilShared} />
     </Tab.Navigator>
   );
