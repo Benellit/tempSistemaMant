@@ -2,9 +2,11 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { useAuth } from "../screens/login/AuthContext";
 
 function BottomTabNavigator() {
     const navigation = useNavigation();
+    const { profile } = useAuth();
     const route = useRoute();
     const [activeTab, setActiveTab] = useState(route.name);
 
@@ -26,7 +28,7 @@ function BottomTabNavigator() {
                         if (activeTab === "Usuarios") navigation.navigate("RegistrarUsuarios");
                     }}
                 >
-                    <AntDesign name="plus" size={28} color="white" />
+                    <AntDesign name="plus" size={28} color={profile.modoOscuro === true ? "#EDEDED" : "#121212"} />
                 </TouchableOpacity>
             )}
         </View>

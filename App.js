@@ -134,14 +134,22 @@ function RoleTabs() {
   const { profile } = useAuth(); // viene de Firestore USUARIO/{uid}
 
   if (profile?.rol === "Administrador") return <AdminScreens />;
-  if (profile?.rol === "Gestor")       return <GestorScreens />;
-  if (profile?.rol === "Tecnico")       return <TecnicoScreens />;
+  if (profile?.rol === "Gestor") return <GestorScreens />;
+  if (profile?.rol === "Tecnico") return <TecnicoScreens />;
 }
 
 function AdminScreens() {
+  const { profile } = useAuth();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        tabBarStyle: {
+          backgroundColor: profile.modoOscuro === true ? "white" : "#2C2C2C", // 👈 Fondo del tab (modo oscuro)
+          borderTopWidth: 2,   // 👈 elimina la línea superior
+          borderColor: "#D9D9D9",
+          elevation: 0,        // 👈 elimina sombra en Android
+          shadowOpacity: 0,
+        },
         headerShown: false,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
@@ -169,14 +177,14 @@ function AdminScreens() {
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: 'gray',
+        tabBarInactiveTintColor: profile.modoOscuro === true ? "gray" : "#D9D9D9",
       })}
     >
-      <Tab.Screen name="Home"       component={HomeAdmin} />
+      <Tab.Screen name="Home" component={HomeAdmin} />
       <Tab.Screen name="Sucursales" component={SucursalesAdmin} />
-      <Tab.Screen name="Tareas"     component={TareasAdmin} />
-      <Tab.Screen name="Usuarios"   component={Administradores} />
-      <Tab.Screen name="Profile"    component={PerfilShared} />
+      <Tab.Screen name="Tareas" component={TareasAdmin} />
+      <Tab.Screen name="Usuarios" component={Administradores} />
+      <Tab.Screen name="Profile" component={PerfilShared} />
     </Tab.Navigator>
   );
 }
@@ -202,13 +210,13 @@ function GestorScreens() {
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: 'gray',
+        tabBarInactiveTintColor: profile.modoOscuro === true ? "black" : "#D9D9D9",
       })}
     >
-      <Tab.Screen name="Home"     component={HomeGestor} />
-      <Tab.Screen name="Tareas"   component={TareasShared} />
+      <Tab.Screen name="Home" component={HomeGestor} />
+      <Tab.Screen name="Tareas" component={TareasShared} />
       <Tab.Screen name="Usuarios" component={UsuariosGestor} />
-      <Tab.Screen name="Profile"  component={PerfilShared} />
+      <Tab.Screen name="Profile" component={PerfilShared} />
     </Tab.Navigator>
   );
 }
@@ -238,11 +246,11 @@ function TecnicoScreens() {
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: 'gray',
+        tabBarInactiveTintColor: profile.modoOscuro === true ? "black" : "#D9D9D9",
       })}
     >
-      <Tab.Screen name="Home"    component={HomeTecnico} />
-      <Tab.Screen name="Tareas"  component={TareasShared} />
+      <Tab.Screen name="Home" component={HomeTecnico} />
+      <Tab.Screen name="Tareas" component={TareasShared} />
       <Tab.Screen name="Profile" component={PerfilShared} />
     </Tab.Navigator>
   );

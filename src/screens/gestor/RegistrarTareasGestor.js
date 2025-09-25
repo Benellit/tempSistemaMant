@@ -41,27 +41,27 @@ const RegistrarTareasGestor = (navigation, back) => {
         getContadorTarea();
     }, []);
 
-    // Cantidad USUARIO_TAREA
-    const getContadorUSUARIO_TAREA = async () => {
-        try {
-            const docRef = doc(db, "contador", "usuario_tarea");
-            const docSnap = await getDoc(docRef);
+    // // Cantidad USUARIO_TAREA
+    // const getContadorUSUARIO_TAREA = async () => {
+    //     try {
+    //         const docRef = doc(db, "contador", "usuario_tarea");
+    //         const docSnap = await getDoc(docRef);
 
-            if (docSnap.exists()) {
-                return docSnap.data().cantidad;
-            } else {
-                console.log("Documento 'usuario_tarea' no existe");
-                return 0;
-            }
-        } catch (error) {
-            console.error("Error obteniendo contador de usuario_tarea:", error);
-            return 0;
-        }
-    };
+    //         if (docSnap.exists()) {
+    //             return docSnap.data().cantidad;
+    //         } else {
+    //             console.log("Documento 'usuario_tarea' no existe");
+    //             return 0;
+    //         }
+    //     } catch (error) {
+    //         console.error("Error obteniendo contador de usuario_tarea:", error);
+    //         return 0;
+    //     }
+    // };
 
-    useEffect(() => {
-        getContadorUSUARIO_TAREA();
-    }, []);
+    // useEffect(() => {
+    //     getContadorUSUARIO_TAREA();
+    // }, []);
 
 
     // USUARIOS con rol Tecnico por SUCURSAL
@@ -137,31 +137,41 @@ const RegistrarTareasGestor = (navigation, back) => {
                 descripcion,
                 fechaCreacion: new Date(),
                 prioridad: valuePrioridad,
-                fechaEntrega: selectedDate.toISOString(),
                 estado: "Pendiente",
+                fechaEntrega: selectedDate.toISOString(),
+                IDCreador: doc(db, "USUARIO", profile?.id.toString()),
+                IDSucursal: doc(db, "SUCURSAL", valueSucursal.toString()),
             });
+
             console.log("Tarea guardada");
+
+            for (const tecnico of arrayValueTecnicos) {
+                const tecnicoRef = doc(collection(docRef, "Tecnicos"));
+                await setDoc(tecnicoRef, {
+                    IDUsuario: doc(db, "USUARIO", tecnico.value),
+                });
+            }
 
             const contadorRef = doc(db, "contador", "tarea");
             await updateDoc(contadorRef, { cantidad: nuevoNumero });
 
-            let contadorUsuario_Tarea = await getContadorUSUARIO_TAREA();
-            console.log("Contador usuario_tarea:", contadorUsuario_Tarea);
+            // let contadorUsuario_Tarea = await getContadorUSUARIO_TAREA();
+            // console.log("Contador usuario_tarea:", contadorUsuario_Tarea);
 
-            for (const tecnico of arrayValueTecnicos) {
-                contadorUsuario_Tarea++;
-                const docUT = doc(db, "USUARIO_TAREA", contadorUsuario_Tarea.toString());
-                console.log("Guardando usuario_tarea para técnico:", tecnico.value);
-                await setDoc(docUT, {
-                    IDUsuario: doc(db, "USUARIO", tecnico.value),
-                    IDTarea: doc(db, "TAREA", nuevoNumero.toString()),
-                });
-            }
+            // for (const tecnico of arrayValueTecnicos) {
+            //     contadorUsuario_Tarea++;
+            //     const docUT = doc(db, "USUARIO_TAREA", contadorUsuario_Tarea.toString());
+            //     console.log("Guardando usuario_tarea para técnico:", tecnico.value);
+            //     await setDoc(docUT, {
+            //         IDUsuario: doc(db, "USUARIO", tecnico.value),
+            //         IDTarea: doc(db, "TAREA", nuevoNumero.toString()),
+            //     });
+            // }
 
-            const contadorUTRef = doc(db, "contador", "usuario_tarea");
-            await updateDoc(contadorUTRef, { cantidad: contadorUsuario_Tarea });
+            // const contadorUTRef = doc(db, "contador", "usuario_tarea");
+            // await updateDoc(contadorUTRef, { cantidad: contadorUsuario_Tarea });
 
-            Alert.alert("Éxito", "Tarea creada correctamente");
+            // Alert.alert("Éxito", "Tarea creada correctamente");
 
             setNombre("");
             setDescripcion("");

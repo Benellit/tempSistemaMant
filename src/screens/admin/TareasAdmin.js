@@ -3,14 +3,18 @@ import Feather from '@expo/vector-icons/Feather';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from "expo-linear-gradient";
-import { collection, getDocs, getFirestore, orderBy, query } from "firebase/firestore";
+import { collection, getDoc, getDocs, getFirestore, orderBy, query } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Dimensions, Image, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import BotonRegistrar from '../../components/BotonRegistrar';
 import appFirebase from '../../credenciales/Credenciales';
+import { useAuth } from "../login/AuthContext";
+
 
 export default function TareasAdmin({ navigation }) {
     const db = getFirestore(appFirebase);
+    
+    const { profile } = useAuth();
     const screenHeight = Dimensions.get("window").height;
 
     const [refreshing, setRefreshing] = useState(false);
@@ -47,6 +51,61 @@ export default function TareasAdmin({ navigation }) {
         getTareas();
     }, []);
 
+    // Mostrar Tecnicos por tareas
+    function TecnicosList({ tareaID }) {
+        const [tecnicos, setTecnicos] = useState([]);
+        useEffect(() => {
+            const fetchTecnicos = async () => {
+                try {
+                    const ref = collection(db, "TAREA", tareaID, "Tecnicos");
+                    const snap = await getDocs(ref);
+
+                    const tecnicosData = await Promise.all(
+                        snap.docs.map(async (d) => {
+                            const data = d.data();
+
+                            let usuario = null;
+                            if (data.IDUsuario) {
+                                try {
+                                    const userSnap = await getDoc(data.IDUsuario);
+                                    if (userSnap.exists()) {
+                                        usuario = userSnap.data();
+                                    }
+                                } catch (err) {
+                                    console.error("Error cargando usuario:", err);
+                                }
+                            }
+
+                            return { id: d.id, ...data, usuario };
+                        })
+                    );
+                    setTecnicos(tecnicosData);
+                } catch (error) {
+                    console.error("Error cargando técnicos:", error);
+                }
+            };
+
+            fetchTecnicos();
+        }, [tareaID]);
+
+        return (
+            <View style={{ flexDirection: 'row' }}>
+                {tecnicos.map((tecnico) => (
+                    <View key={tecnico.id} style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Image
+                            style={{ width: 27, height: 27, borderRadius: 100 }}
+                            source={{
+                                uri: tecnico.usuario?.fotoPerfil ??
+                                    "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+                            }}
+                        />
+                    </View>
+                ))}
+            </View>
+        );
+    }
+
+
     const [busqueda, setBusqueda] = useState("")
 
     const formatFecha = (fecha) => {
@@ -79,67 +138,67 @@ export default function TareasAdmin({ navigation }) {
 
     //Funcion para cambiar de color la estado de la TAREA
     const getEstadoStyle = (estado) => {
-        if (!estado) return { backgroundColor: '#9E9E9E', color: 'white' };
+        if (!estado) return { backgroundColor: '#9E9E9E', color: profile.modoOscuro === true ? "#EDEDED" : "black", };
         const status = estado;
 
         if (status === 'Completada') {
             return {
                 backgroundColor: '#47A997',
-                color: 'white',
+                color: profile.modoOscuro === true ? "#EDEDED" : "black",
             };
         } else if (status === 'Revisada') {
             return {
                 backgroundColor: '#B383E2',
-                color: 'white'
+                color: profile.modoOscuro === true ? "#EDEDED" : "black",
             };
         } else if (status === "Pendiente") {
             return {
                 backgroundColor: '#F4C54C',
-                color: 'white'
+                color: profile.modoOscuro === true ? "#EDEDED" : "black",
             };
         } else if (status === "En Proceso") {
             return {
                 backgroundColor: '#57A7FE',
-                color: 'white'
+                color: profile.modoOscuro === true ? "#EDEDED" : "black",
             };
         } else if (status === "No Entregada") {
             return {
                 backgroundColor: '#F5615C',
-                color: 'white'
+                color: profile.modoOscuro === true ? "#EDEDED" : "black",
             };
         }
 
         return {
             backgroundColor: '#9E9E9E',
-            color: "white"
+            color: profile.modoOscuro === true ? "#EDEDED" : "black",
         };
     };
 
     //Funcion para cambiar de color la prioridad de la TAREA
     const getPrioridadStyle = (prioridad) => {
-        if (!prioridad) return { backgroundColor: '#9E9E9E', color: 'white' };
+        if (!prioridad) return { backgroundColor: '#9E9E9E', color: profile.modoOscuro === true ? "#EDEDED" : "black", };
         const status = prioridad;
 
         if (status === 'Alta') {
             return {
                 backgroundColor: '#F5615C',
-                color: 'white',
+                color: profile.modoOscuro === true ? "#EDEDED" : "black",
             };
         } else if (status === 'Media') {
             return {
                 backgroundColor: '#F5C44C',
-                color: 'white'
+                ccolor: profile.modoOscuro === true ? "#EDEDED" : "black",
             };
         } else if (status === "Baja") {
             return {
                 backgroundColor: '#57A6FF',
-                color: 'white'
+                color: profile.modoOscuro === true ? "#EDEDED" : "black",
             };
         }
 
         return {
             backgroundColor: '#9E9E9E',
-            color: "white"
+            color: profile.modoOscuro === true ? "#EDEDED" : "black",
         };
     };
 
@@ -152,33 +211,26 @@ export default function TareasAdmin({ navigation }) {
         >
             <View style={{ flex: 1 }}>
                 {/* Header */}
-                <View style={{
-                    paddingTop: 15, paddingHorizontal: 15, paddingBottom: 20, backgroundColor: "white", shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 5,
-                    elevation: 6,
-                    borderBottomWidth: 2,
-                    borderColor: "#D9D9D9"
-                }}>
+                <View style={profile.modoOscuro === true ? styles.headerClaro : styles.headerOscuro}>
                     <View>
-                        <Text style={styles.titulo}>Tareas</Text>
+                        <Text style={profile.modoOscuro === true ? styles.tituloClaro : styles.tituloOscuro}>Tareas</Text>
                     </View>
                     <View style={{ flexDirection: "row", gap: 10 }}>
-                        <View style={{ marginBottom: 0, marginTop: 10, flex: 1 }}>
+                        <View style={{ marginBottom: 0, marginTop: 5, flex: 1 }}>
                             <TextInput
                                 placeholder="Buscar"
+                                placeholderTextColor={profile.modoOscuro === true ? "black" : "#FFFF"}
                                 style={styles.inputBusqueda}
                                 value={busqueda}
                                 onChangeText={setBusqueda}
                             />
-                            <View style={{ position: "absolute", right: 15, top: 16 }}>
-                                <FontAwesome6 name="magnifying-glass" size={18} color="black" />
+                            <View style={{ position: "absolute", right: 15, top: 14 }}>
+                                <FontAwesome6 name="magnifying-glass" size={18} color={ profile.modoOscuro === true ? "black" : "#FFFF" } />
                             </View>
                         </View>
-                        <View style={{ marginTop: 10, justifyContent: "center", alignContent: "center" }}>
+                        <View style={{ marginTop: 5, justifyContent: "center", alignContent: "center" }}>
                             <TouchableOpacity style={styles.opciones}>
-                                <Ionicons name="options-outline" size={24} color="black" />
+                                <Ionicons name="options-outline" size={22} color={ profile.modoOscuro === true ? "black" : "#FFFF" } />
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -196,9 +248,9 @@ export default function TareasAdmin({ navigation }) {
                     }
                 >
                     {tareas.map((tarea) => (
-                        <TouchableOpacity key={tarea.id} style={{ backgroundColor: "white", borderRadius: 8, paddingHorizontal: 15, paddingVertical: 10, marginBottom: 10, elevation: 30 }}>
+                        <TouchableOpacity key={tarea.id} style={profile.modoOscuro === true ? styles.cardsTareasClaro : styles.cardsTareasOscuro }>
                             <View>
-                                <Text style={{ fontSize: 18, fontWeight: 700 }}>{tarea.nombre}</Text>
+                                <Text style={profile.modoOscuro === true ? styles.tituloCardClaro : styles.tituloCardOscuro }>{tarea.nombre}</Text>
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignContent: "center" }}>
                                     <View style={{ flexDirection: "row", gap: 10, marginBottom: 15, marginTop: 5 }}>
                                         <View>
@@ -211,12 +263,12 @@ export default function TareasAdmin({ navigation }) {
                                     <View style={{ justifyContent: "center" }}>
                                         <View style={{ flexDirection: 'row', gap: 10 }}>
                                             <View style={{ flexDirection: "row", gap: 6 }}>
-                                                <Feather name="camera" size={18} color="#7B7B7B" />
-                                                <Text style={{ color: "#7B7B7B" }}>0</Text>
+                                                <Feather name="camera" size={18} color={profile.modoOscuro === true ? "#7B7B7B" : "#EDEDED"} />
+                                                <Text style={profile.modoOscuro === true ? styles.numerosClaro : styles.numerosOscuro}>0</Text>
                                             </View>
                                             <View style={{ flexDirection: "row", gap: 6 }}>
-                                                <AntDesign name="book" size={18} color="#7B7B7B" />
-                                                <Text style={{ color: "#7B7B7B" }}>0</Text>
+                                                <AntDesign name="book" size={18} color={profile.modoOscuro === true ? "#7B7B7B" : "#EDEDED"} />
+                                                <Text style={profile.modoOscuro === true ? styles.numerosClaro : styles.numerosOscuro}>0</Text>
                                             </View>
                                         </View>
                                     </View>
@@ -224,34 +276,16 @@ export default function TareasAdmin({ navigation }) {
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignContent: "center" }}>
                                     <View style={{ flexDirection: "row", gap: 7 }}>
                                         <View style={{ alignItems: "center", justifyContent: "center" }}>
-                                            <Feather name="calendar" size={20} color="#7B7B7B" />
+                                            <Feather name="calendar" size={20} color={profile.modoOscuro === true ? "#7B7B7B" : "#EDEDED"} />
                                         </View>
                                         <View style={{ alignItems: "center", justifyContent: "center" }}>
-                                            <Text style={{ color: "#7B7B7B" }}>
+                                            <Text style={profile.modoOscuro === true ? styles.numerosClaro : styles.numerosOscuro}>
                                                 {formatFecha(tarea.fechaCreacion)} - {formatFecha(tarea.fechaEntrega)}
                                             </Text>
                                         </View>
                                     </View>
-                                    <View style={{ flexDirection: 'row' }}>
-                                        <View style={{ position: "relative", right: -10 }}>
-                                            <Image
-                                                style={{ width: 27, height: 27, borderRadius: 100, borderWidth: 1, borderColor: "#7B7B7B" }}
-                                                source={{ uri: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" }}
-                                            />
-                                        </View>
-                                        <View style={{ position: "relative", right: -5 }}>
-                                            <Image
-                                                style={{ width: 27, height: 27, borderRadius: 100, borderWidth: 1, borderColor: "#7B7B7B" }}
-                                                source={{ uri: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" }}
-                                            />
-                                        </View>
-                                        <View style={{ position: "relative", right: 0 }}>
-                                            <Image
-                                                style={{ width: 27, height: 27, borderRadius: 100, borderWidth: 1, borderColor: "#7B7B7B" }}
-                                                source={{ uri: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" }}
-                                            />
-                                        </View>
-                                    </View>
+                                    <TecnicosList tareaID={tarea.id} />
+
                                 </View>
                             </View>
                         </TouchableOpacity>
@@ -269,8 +303,40 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    titulo: {
+    headerClaro: {
+        paddingTop: 15,
+        paddingHorizontal: 15,
+        paddingBottom: 10,
+        backgroundColor: "white",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 6,
+        borderBottomWidth: 2,
+        borderColor: "#D9D9D9"
+    },
+    headerOscuro: {
+        paddingTop: 15,
+        paddingHorizontal: 15,
+        paddingBottom: 10,
+        backgroundColor: "#2C2C2C",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 6,
+        borderBottomWidth: 2,
+        borderColor: "#D9D9D9"
+    },
+    tituloClaro: {
         color: "black",
+        fontSize: 26,
+        fontWeight: 900,
+        marginTop: 10,
+    },
+    tituloOscuro: {
+        color: "white",
         fontSize: 26,
         fontWeight: 900,
         marginTop: 10,
@@ -280,7 +346,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         borderColor: "#D9D9D9",
         borderWidth: 2,
-        fontSize: 18,
+        fontSize: 16,
     },
     opciones: {
         padding: 10,
@@ -292,5 +358,36 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         flexDirection: "row",
         gap: 7,
+    },
+    cardsTareasClaro: {
+        backgroundColor: "white",
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        marginBottom: 10,
+        elevation: 30
+    },
+    cardsTareasOscuro: {
+        backgroundColor: "#2C2C2C",
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        marginBottom: 10,
+        elevation: 30
+    },
+    tituloCardClaro: {
+        fontSize: 18,
+        fontWeight: 700,
+    },
+    tituloCardOscuro: {
+        color: "white",
+        fontSize: 18,
+        fontWeight: 700,
+    },
+    numerosClaro: {
+        color: "#7B7B7B"
+    },
+    numerosOscuro: {
+        color: "#EDEDED"
     }
 });
