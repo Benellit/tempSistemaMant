@@ -2,8 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { LinearGradient } from "expo-linear-gradient";
-import { ActivityIndicator, Platform, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 
 // Contexto de auth
 import { AuthProvider, useAuth } from "./src/screens/login/AuthContext";
@@ -15,7 +14,6 @@ import Administradores from "./src/screens/admin/Administradores";
 import HomeAdmin from "./src/screens/admin/HomeAdmin";
 import RegistrarSucursalesAdmin from "./src/screens/admin/RegistrarSucursalesAdmin";
 import SucursalesAdmin from "./src/screens/admin/SucursalesAdmin";
-import TareasAdmin from "./src/screens/admin/TareasAdmin";
 // Gestor
 import HomeGestor from "./src/screens/gestor/HomeGestor";
 import RegistrarTareasGestor from "./src/screens/gestor/RegistrarTareasGestor";
@@ -25,7 +23,9 @@ import UsuariosGestor from "./src/screens/gestor/UsuariosGestor";
 import HomeTecnico from "./src/screens/tecnico/HomeTecnico";
 // Shared
 import PerfilShared from "./src/screens/shared/PerfilShared";
+import TareaDetails from './src/screens/shared/TareaDetails';
 import TareasShared from "./src/screens/shared/TareasShared";
+import EditTarea from './src/screens/admin/EditTarea';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -69,6 +69,7 @@ function AuthStack() {
 
 // Stack principal: tabs por rol + pantallas de registro
 function AppStack() {
+  const { profile } = useAuth();
   return (
     <Stack.Navigator screenOptions={{ cardStyleInterpolator: () => ({ cardStyle: { opacity: 1 } }) }}>
       {/* Los tabs dependen del rol */}
@@ -79,31 +80,32 @@ function AppStack() {
         name="RegistrarTareas"
         component={RegistrarTareasGestor}
         options={{
-          header: ({ navigation, back }) => (
-            <LinearGradient
-              colors={["#87aef0", "#9c8fc4"]}
-              start={{ x: 0.5, y: 0.4 }}
-              end={{ x: 0.5, y: 1 }}
-              style={{
-                height: 120,
-                paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 40,
-                paddingHorizontal: 10,
-                paddingVertical: 10,
-                justifyContent: "center",
-              }}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                {back && (
-                  <TouchableOpacity onPress={navigation.goBack} style={{ padding: 4 }}>
-                    <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
-                  </TouchableOpacity>
-                )}
-              </View>
-              <Text style={{ color: "#FFFFFF", fontSize: 26, fontWeight: 900, paddingLeft: 10, paddingBottom: 20 }}>
-                Agregar Tarea
-              </Text>
-            </LinearGradient>
-          ),
+          headerShown: false
+          // header: ({ navigation, back }) => (
+          //   <LinearGradient
+          //     colors={["#87aef0", "#9c8fc4"]}
+          //     start={{ x: 0.5, y: 0.4 }}
+          //     end={{ x: 0.5, y: 1 }}
+          //     style={{
+          //       height: 120,
+          //       paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 40,
+          //       paddingHorizontal: 10,
+          //       paddingVertical: 10,
+          //       justifyContent: "center",
+          //     }}
+          //   >
+          //     <View style={{ flexDirection: "row", alignItems: "center" }}>
+          //       {back && (
+          //         <TouchableOpacity onPress={navigation.goBack} style={{ padding: 4 }}>
+          //           <Ionicons name="chevron-back" size={24} color={profile.modoOscuro === true ? "#FFFFFF" : "#2C2C2C"} />
+          //         </TouchableOpacity>
+          //       )}
+          //     </View>
+          //     <Text style={profile.modoOscuro === true ? { color: "#FFFFFF", fontSize: 26, fontWeight: 900, paddingLeft: 10, paddingBottom: 20 } : { color: "#2C2C2C", fontSize: 26, fontWeight: 900, paddingLeft: 10, paddingBottom: 20 }}>
+          //       Agregar Tarea
+          //     </Text>
+          //   </LinearGradient>
+          // ),
         }}
       />
       <Stack.Screen
@@ -122,6 +124,23 @@ function AppStack() {
           headerTitle: "",
           headerStyle: { backgroundColor: "#618ccfff", height: 80 },
           headerTintColor: "#fff",
+        }}
+      />
+      <Stack.Screen
+        name="TareaDetails"
+        component={TareaDetails}
+        options={{
+          headerShown: false
+        }}
+      />
+      <Stack.Screen name="Tareas" component={TareasShared}
+        options={{
+          headerShown: false
+        }}
+      />
+      <Stack.Screen name="EditTarea" component={EditTarea}
+        options={{
+          headerShown: false
         }}
       />
     </Stack.Navigator>
@@ -182,7 +201,7 @@ function AdminScreens() {
     >
       <Tab.Screen name="Home" component={HomeAdmin} />
       <Tab.Screen name="Sucursales" component={SucursalesAdmin} />
-      <Tab.Screen name="Tareas" component={TareasAdmin} />
+      <Tab.Screen name="Tareas" component={TareasShared} />
       <Tab.Screen name="Usuarios" component={Administradores} />
       <Tab.Screen name="Profile" component={PerfilShared} />
     </Tab.Navigator>
@@ -190,6 +209,7 @@ function AdminScreens() {
 }
 
 function GestorScreens() {
+  const { profile } = useAuth();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -222,6 +242,7 @@ function GestorScreens() {
 }
 
 function TecnicoScreens() {
+  const { profile } = useAuth();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({

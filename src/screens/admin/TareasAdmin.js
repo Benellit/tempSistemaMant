@@ -5,7 +5,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from "expo-linear-gradient";
 import { collection, getDoc, getDocs, getFirestore, orderBy, query } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { Dimensions, Image, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert } from 'react-native';
 import BotonRegistrar from '../../components/BotonRegistrar';
 import appFirebase from '../../credenciales/Credenciales';
 import { useAuth } from "../login/AuthContext";
@@ -13,7 +13,7 @@ import { useAuth } from "../login/AuthContext";
 
 export default function TareasAdmin({ navigation }) {
     const db = getFirestore(appFirebase);
-    
+
     const { profile } = useAuth();
     const screenHeight = Dimensions.get("window").height;
 
@@ -28,20 +28,37 @@ export default function TareasAdmin({ navigation }) {
     };
 
     // Conseguir TAREAS
-    //
     const [tareas, setTareas] = useState([]);
+
     const getTareas = async () => {
         try {
-            const tareasCollection = collection(db, "TAREA");
-            const q = query(tareasCollection, orderBy("fechaCreacion", "desc"));
+            if (profile.rol === "Administrador") {
+                const tareasCollection = collection(db, "TAREA");
+                const q = query(tareasCollection, orderBy("fechaCreacion", "desc"));
 
-            const responseTareas = await getDocs(q);
-            const tareaList = responseTareas.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
+                const responseTareas = await getDocs(q);
+                const tareaList = responseTareas.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
 
-            setTareas(tareaList)
+                setTareas(tareaList)
+            } else if (profile.rol === "Gestor") {
+                const tareasCollection = collection(db, "TAREA");
+                const q = query(tareasCollection, orderBy("fechaCreacion", "desc"), where("IDSucursal", "==", `${profile.IDSucursal}`));
+
+                const responseTareas = await getDocs(q);
+                const tareaList = responseTareas.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
+
+                setTareas(tareaList)
+            } else if (profile.rol === "Tecnico") {
+
+            } else {
+                navigation.navigate("Tabs");
+            }
         } catch (error) {
             console.error("Error consiguiendo las Tareas:", error)
         }
@@ -57,8 +74,8 @@ export default function TareasAdmin({ navigation }) {
         useEffect(() => {
             const fetchTecnicos = async () => {
                 try {
-                    const ref = collection(db, "TAREA", tareaID, "Tecnicos");
-                    const snap = await getDocs(ref);
+                    const refTecnicos = collection(db, "TAREA", tareaID, "Tecnicos");
+                    const snap = await getDocs(refTecnicos);
 
                     const tecnicosData = await Promise.all(
                         snap.docs.map(async (d) => {
@@ -95,8 +112,9 @@ export default function TareasAdmin({ navigation }) {
                         <Image
                             style={{ width: 27, height: 27, borderRadius: 100 }}
                             source={{
-                                uri: tecnico.usuario?.fotoPerfil ??
-                                    "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+                                uri: tecnico.usuario?.fotoPerfil && tecnico.usuario.fotoPerfil.trim() !== ""
+                                    ? tecnico.usuario.fotoPerfil
+                                    : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
                             }}
                         />
                     </View>
@@ -105,6 +123,43 @@ export default function TareasAdmin({ navigation }) {
         );
     }
 
+    // Mostar cantidad de reportes y evidencias por tarea
+    function ReportesYEvidenciasList({ tareaID }) {
+        const [reportes, setReportes] = useState("");
+        const [evidencias, setEvidencias] = useState("");
+        useEffect(() => {
+            const fetchRepYEvi = async () => {
+                try {
+                    const refReporte = collection(db, "TAREA", tareaID, "Reportes");
+                    const responseReportes = await getDocs(refReporte);
+
+                    setReportes(responseReportes.size);
+
+                    const refEvidencias = collection(db, "TAREA", tareaID, "Evidencias");
+                    const responseEvidencias = await getDocs(refEvidencias);
+
+                    setEvidencias(responseEvidencias.size);
+                } catch (error) {
+                    console.error("Error cargando RepYEvi:", error);
+                }
+            };
+
+            fetchRepYEvi();
+        }, [tareaID]);
+
+        return (
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flexDirection: "row", gap: 6 }}>
+                    <Feather name="camera" size={18} color={profile.modoOscuro === true ? "#7B7B7B" : "#EDEDED"} />
+                    <Text style={profile.modoOscuro === true ? styles.numerosClaro : styles.numerosOscuro}>{evidencias}</Text>
+                </View>
+                <View style={{ flexDirection: "row", gap: 6 }}>
+                    <AntDesign name="book" size={18} color={profile.modoOscuro === true ? "#7B7B7B" : "#EDEDED"} />
+                    <Text style={profile.modoOscuro === true ? styles.numerosClaro : styles.numerosOscuro}>{reportes}</Text>
+                </View>
+            </View>
+        );
+    }
 
     const [busqueda, setBusqueda] = useState("")
 
@@ -144,33 +199,33 @@ export default function TareasAdmin({ navigation }) {
         if (status === 'Completada') {
             return {
                 backgroundColor: '#47A997',
-                color: profile.modoOscuro === true ? "#EDEDED" : "black",
+                color: profile.modoOscuro === true ? "white" : "black",
             };
         } else if (status === 'Revisada') {
             return {
                 backgroundColor: '#B383E2',
-                color: profile.modoOscuro === true ? "#EDEDED" : "black",
+                color: profile.modoOscuro === true ? "white" : "black",
             };
         } else if (status === "Pendiente") {
             return {
                 backgroundColor: '#F4C54C',
-                color: profile.modoOscuro === true ? "#EDEDED" : "black",
+                color: profile.modoOscuro === true ? "white" : "black",
             };
         } else if (status === "En Proceso") {
             return {
                 backgroundColor: '#57A7FE',
-                color: profile.modoOscuro === true ? "#EDEDED" : "black",
+                color: profile.modoOscuro === true ? "white" : "black",
             };
         } else if (status === "No Entregada") {
             return {
                 backgroundColor: '#F5615C',
-                color: profile.modoOscuro === true ? "#EDEDED" : "black",
+                color: profile.modoOscuro === true ? "white" : "black",
             };
         }
 
         return {
             backgroundColor: '#9E9E9E',
-            color: profile.modoOscuro === true ? "#EDEDED" : "black",
+            color: profile.modoOscuro === true ? "white" : "black",
         };
     };
 
@@ -182,24 +237,29 @@ export default function TareasAdmin({ navigation }) {
         if (status === 'Alta') {
             return {
                 backgroundColor: '#F5615C',
-                color: profile.modoOscuro === true ? "#EDEDED" : "black",
+                color: profile.modoOscuro === true ? "white" : "black",
             };
         } else if (status === 'Media') {
             return {
                 backgroundColor: '#F5C44C',
-                ccolor: profile.modoOscuro === true ? "#EDEDED" : "black",
+                color: profile.modoOscuro === true ? "white" : "black",
             };
         } else if (status === "Baja") {
             return {
                 backgroundColor: '#57A6FF',
-                color: profile.modoOscuro === true ? "#EDEDED" : "black",
+                color: profile.modoOscuro === true ? "white" : "black",
             };
         }
 
         return {
             backgroundColor: '#9E9E9E',
-            color: profile.modoOscuro === true ? "#EDEDED" : "black",
+            color: profile.modoOscuro === true ? "white" : "black",
         };
+    };
+
+    // Navegacion a mas info de la tarea en base al rol
+    const handlePress = () => {
+        Alert.alert("Button Pressed!");
     };
 
     return (
@@ -225,12 +285,12 @@ export default function TareasAdmin({ navigation }) {
                                 onChangeText={setBusqueda}
                             />
                             <View style={{ position: "absolute", right: 15, top: 14 }}>
-                                <FontAwesome6 name="magnifying-glass" size={18} color={ profile.modoOscuro === true ? "black" : "#FFFF" } />
+                                <FontAwesome6 name="magnifying-glass" size={18} color={profile.modoOscuro === true ? "black" : "#FFFF"} />
                             </View>
                         </View>
                         <View style={{ marginTop: 5, justifyContent: "center", alignContent: "center" }}>
                             <TouchableOpacity style={styles.opciones}>
-                                <Ionicons name="options-outline" size={22} color={ profile.modoOscuro === true ? "black" : "#FFFF" } />
+                                <Ionicons name="options-outline" size={22} color={profile.modoOscuro === true ? "black" : "#FFFF"} />
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -248,9 +308,9 @@ export default function TareasAdmin({ navigation }) {
                     }
                 >
                     {tareas.map((tarea) => (
-                        <TouchableOpacity key={tarea.id} style={profile.modoOscuro === true ? styles.cardsTareasClaro : styles.cardsTareasOscuro }>
+                        <TouchableOpacity onPress={handlePress} key={tarea.id} style={profile.modoOscuro === true ? styles.cardsTareasClaro : styles.cardsTareasOscuro}>
                             <View>
-                                <Text style={profile.modoOscuro === true ? styles.tituloCardClaro : styles.tituloCardOscuro }>{tarea.nombre}</Text>
+                                <Text style={profile.modoOscuro === true ? styles.tituloCardClaro : styles.tituloCardOscuro}>{tarea.nombre}</Text>
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignContent: "center" }}>
                                     <View style={{ flexDirection: "row", gap: 10, marginBottom: 15, marginTop: 5 }}>
                                         <View>
@@ -261,16 +321,7 @@ export default function TareasAdmin({ navigation }) {
                                         </View>
                                     </View>
                                     <View style={{ justifyContent: "center" }}>
-                                        <View style={{ flexDirection: 'row', gap: 10 }}>
-                                            <View style={{ flexDirection: "row", gap: 6 }}>
-                                                <Feather name="camera" size={18} color={profile.modoOscuro === true ? "#7B7B7B" : "#EDEDED"} />
-                                                <Text style={profile.modoOscuro === true ? styles.numerosClaro : styles.numerosOscuro}>0</Text>
-                                            </View>
-                                            <View style={{ flexDirection: "row", gap: 6 }}>
-                                                <AntDesign name="book" size={18} color={profile.modoOscuro === true ? "#7B7B7B" : "#EDEDED"} />
-                                                <Text style={profile.modoOscuro === true ? styles.numerosClaro : styles.numerosOscuro}>0</Text>
-                                            </View>
-                                        </View>
+                                        <ReportesYEvidenciasList tareaID={tarea.id} />
                                     </View>
                                 </View>
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignContent: "center" }}>

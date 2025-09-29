@@ -1,6 +1,7 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Fontisto from '@expo/vector-icons/Fontisto';
-import { useNavigation } from "@react-navigation/native";
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { LinearGradient } from "expo-linear-gradient";
 import { collection, doc, getDoc, getDocs, getFirestore, query, setDoc, updateDoc, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -9,14 +10,15 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import appFirebase from '../../credenciales/Credenciales';
 import { useAuth } from "../login/AuthContext";
 
-const RegistrarTareasGestor = (navigation, back) => {
+const RegistrarTareasGestor = ({navigation}) => {
     const db = getFirestore(appFirebase);
-    navigation = useNavigation();
     const { profile } = useAuth();
 
-    if (profile?.rol === "Tecnico") {
-        navigation.navigate("Tabs");
-    }
+    useEffect(() => {
+        if (profile?.rol === "Tecnico") {
+            navigation.navigate("Tabs");
+        }
+    }, [profile, navigation]);
 
     // CANTIDAD DE TAREAS
     const [contadorTarea, setContadorTarea] = useState([])
@@ -41,35 +43,12 @@ const RegistrarTareasGestor = (navigation, back) => {
         getContadorTarea();
     }, []);
 
-    // // Cantidad USUARIO_TAREA
-    // const getContadorUSUARIO_TAREA = async () => {
-    //     try {
-    //         const docRef = doc(db, "contador", "usuario_tarea");
-    //         const docSnap = await getDoc(docRef);
-
-    //         if (docSnap.exists()) {
-    //             return docSnap.data().cantidad;
-    //         } else {
-    //             console.log("Documento 'usuario_tarea' no existe");
-    //             return 0;
-    //         }
-    //     } catch (error) {
-    //         console.error("Error obteniendo contador de usuario_tarea:", error);
-    //         return 0;
-    //     }
-    // };
-
-    // useEffect(() => {
-    //     getContadorUSUARIO_TAREA();
-    // }, []);
-
-
     // USUARIOS con rol Tecnico por SUCURSAL
     const getUsersBySucursal = async (sucursalID) => {
         try {
             const sucursalRef = doc(db, "SUCURSAL", String(sucursalID));
-            const usersRef = collection(db, "USUARIO_SUCURSAL");
-            const q = query(usersRef, where("IDSucursal", "==", sucursalRef), where("fechaFin", "==", null));
+            const usersRef = collection(db, "USUARIO");
+            const q = query(usersRef, where("IDSucursal", "==", sucursalRef));
             const responseDB = await getDocs(q);
 
             const tecnicosArray = [];
@@ -77,32 +56,37 @@ const RegistrarTareasGestor = (navigation, back) => {
             for (const docSnap of responseDB.docs) {
                 const data = docSnap.data();
 
-                const usuarioRef = data.IDUsuario;
-                const usuarioSnap = await getDoc(usuarioRef);
-
-                if (usuarioSnap.exists() && usuarioSnap.data().rol === "Tecnico") {
+                // Filtrar por rol directamente
+                if (data.rol === "Tecnico") {
                     tecnicosArray.push({
-                        value: usuarioSnap.id,
-                        primerNombre: usuarioSnap.data().primerNombre || "",
-                        segundoNombre: usuarioSnap.data().segundoNombre || "",
-                        primerApellido: usuarioSnap.data().primerApellido || "",
-                        segundoApellido: usuarioSnap.data().segundoApellido || "",
-                        fotoPerfil: usuarioSnap.data().fotoPerfil || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+                        value: docSnap.id,
+                        primerNombre: data.primerNombre || "",
+                        segundoNombre: data.segundoNombre || "",
+                        primerApellido: data.primerApellido || "",
+                        segundoApellido: data.segundoApellido || "",
+                        fotoPerfil:
+                            data.fotoPerfil ||
+                            "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
                         label: (
-                            (usuarioSnap.data().primerNombre || "") + " " +
-                            (usuarioSnap.data().segundoNombre || "") + " " +
-                            (usuarioSnap.data().primerApellido || "") + " " +
-                            (usuarioSnap.data().segundoApellido || "")
+                            (data.primerNombre || "") +
+                            " " +
+                            (data.segundoNombre || "") +
+                            " " +
+                            (data.primerApellido || "") +
+                            " " +
+                            (data.segundoApellido || "")
                         ).trim() || "Sin nombre",
                     });
                 }
             }
+
             setTecnicos(tecnicosArray);
         } catch (error) {
             console.error(error);
             setTecnicos([]);
         }
     };
+
 
     const [loading, setLoading] = useState(false);
     const saveTareas = async () => {
@@ -305,21 +289,19 @@ const RegistrarTareasGestor = (navigation, back) => {
 
     return (
         <View style={{ flex: 1 }}>
-            {/* <LinearGradient
+            <LinearGradient
                 colors={["#87aef0", "#9c8fc4"]}
                 start={{ x: 0.5, y: 0.4 }}
                 end={{ x: 0.5, y: 1 }}
                 style={{
-                    flex: 1,
+                    height: 155,
                 }}
             >
-                <View style={{ backgroundColor: "#1E1E1E", padding: 10 }}>
+                <View style={{ paddingTop: 40, paddingLeft: 10 }}>
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        {back ? (
-                            <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
-                                <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
-                            </TouchableOpacity>
-                        ) : null}
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
+                            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+                        </TouchableOpacity>
                     </View>
 
                     <Text
@@ -327,21 +309,21 @@ const RegistrarTareasGestor = (navigation, back) => {
                             color: "#FFFFFF",
                             fontSize: 26,
                             fontWeight: "900",
-                            marginTop: 10,
+                            marginTop: 5,
                             paddingLeft: 10,
                         }}
                     >
                         Agregar Tarea
                     </Text>
                 </View>
-            </LinearGradient> */}
-            <View style={styles.container}>
-                <ScrollView style={{ paddingHorizontal: 15 }} nestedScrollEnabled={true}>
+            </LinearGradient>
+            <View style={profile.modoOscuro === true ? styles.containerClaro : styles.containerOscuro}>
+                <ScrollView style={{ paddingHorizontal: 15, borderTopRightRadius: 35, borderTopLeftRadius: 35, paddingBottom: 0}} nestedScrollEnabled={true}>
                     <View>
-                        <Text style={[styles.titulo, { paddingTop: 20 }]}>Datos de la Tarea</Text>
+                        <Text style={[styles.titulo, { paddingTop: 20 }, { color: profile.modoOscuro === true ? 'black' : "white" }]}>Datos de la Tarea</Text>
                         <View style={styles.containerInputs}>
-                            <Text style={styles.label}>Nombre</Text>
-                            <TextInput style={styles.input}
+                            <Text style={profile.modoOscuro === true ? styles.labelClaro : styles.labelOscuro}>Nombre</Text>
+                            <TextInput style={profile.modoOscuro === true ? styles.inputClaro : styles.inputOscuro}
                                 placeholder='Escribe el nombre'
                                 placeholderTextColor={"#606368"}
                                 value={nombre}
@@ -349,8 +331,8 @@ const RegistrarTareasGestor = (navigation, back) => {
                             />
                         </View>
                         <View style={styles.containerInputs}>
-                            <Text style={styles.label}>Descripción</Text>
-                            <TextInput style={[styles.input, styles.descripcion]}
+                            <Text style={profile.modoOscuro === true ? styles.labelClaro : styles.labelOscuro}>Descripción</Text>
+                            <TextInput style={[profile.modoOscuro === true ? styles.inputClaro : styles.inputOscuro, styles.descripcion]}
                                 placeholder='Escribe la descripción'
                                 placeholderTextColor={"#606368"}
                                 multiline={true}
@@ -360,7 +342,7 @@ const RegistrarTareasGestor = (navigation, back) => {
                             />
                         </View>
                         <View style={styles.containerInputs}>
-                            <Text style={styles.label}>Prioridad</Text>
+                            <Text style={profile.modoOscuro === true ? styles.labelClaro : styles.labelOscuro}>Prioridad</Text>
                             <DropDownPicker
                                 open={openPrioridad}
                                 value={valuePrioridad}
@@ -369,15 +351,25 @@ const RegistrarTareasGestor = (navigation, back) => {
                                 setValue={setValuePrioridad}
                                 setItems={setPrioridad}
                                 placeholder="Selecciona prioridad"
-                                style={[styles.input, styles.box]}
+                                style={[
+                                    profile.modoOscuro ? styles.inputOscuro : styles.inputClaro,
+                                    styles.box
+                                ]}
                                 listMode="SCROLLVIEW"
                                 dropDownContainerStyle={{
                                     borderColor: "#F2F3F5",
                                     borderWidth: 2,
-                                    backgroundColor: "#fff",
+                                    backgroundColor: profile.modoOscuro ? "white" : "#2C2C2C", // 👈 aquí el cambio
                                     borderRadius: 8,
                                 }}
-                                placeholderStyle={{ color: "#606368", fontSize: 16 }}
+                                placeholderStyle={{
+                                    color: profile.modoOscuro ? "black" : "#D1D1D1", // 👈 mejor contraste en oscuro
+                                    fontSize: 16,
+                                }}
+                                textStyle={{
+                                    color: profile.modoOscuro ? "black" : "#D1D1D1",
+                                    fontSize: 16,
+                                }}
                                 zIndex={1000}
                                 zIndexInverse={3000}
                                 onOpen={handleOpenPrioridad}
@@ -385,8 +377,8 @@ const RegistrarTareasGestor = (navigation, back) => {
                         </View>
 
                         <View style={styles.containerInputs}>
-                            <Text style={styles.label}>Fecha de entrega</Text>
-                            <TouchableOpacity onPress={() => setIsVisible(true)} style={styles.input}>
+                            <Text style={profile.modoOscuro === true ? styles.labelClaro : styles.labelOscuro}>Fecha de entrega</Text>
+                            <TouchableOpacity onPress={() => setIsVisible(true)} style={profile.modoOscuro === true ? styles.inputClaro : styles.inputOscuro}>
                                 <View style={{
                                     flexDirection: "row",
                                     justifyContent: "space-between",
@@ -409,14 +401,14 @@ const RegistrarTareasGestor = (navigation, back) => {
                                 onConfirm={handleConfirm}
                                 onCancel={() => setIsVisible(false)}
                                 minimumDate={new Date()}
-                                style={styles.input}
+                                style={profile.modoOscuro === true ? styles.inputClaro : styles.inputOscuro}
                                 zIndex={500}
                                 zIndexInverse={1500}
                             />
                         </View>
 
                         <View style={styles.containerInputs}>
-                            <Text style={styles.label}>Sucursal</Text>
+                            <Text style={profile.modoOscuro === true ? styles.labelClaro : styles.labelOscuro}>Sucursal</Text>
                             <DropDownPicker
                                 open={openSucursal}
                                 value={valueSucursal}
@@ -425,7 +417,7 @@ const RegistrarTareasGestor = (navigation, back) => {
                                 setValue={setValueSucursal}
                                 setItems={setSucursal}
                                 placeholder="Selecciona sucursal"
-                                style={styles.input}
+                                style={profile.modoOscuro === true ? styles.inputClaro : styles.inputOscuro}
                                 listMode="SCROLLVIEW"
                                 dropDownContainerStyle={{
                                     borderColor: "#F2F3F5",
@@ -441,10 +433,10 @@ const RegistrarTareasGestor = (navigation, back) => {
                         </View>
                     </View>
                     <View style={{ marginTop: 20 }}>
-                        <Text style={styles.titulo}>Asignación de la Tarea</Text>
+                        <Text style={[styles.titulo, { color: profile.modoOscuro === true ? 'black' : "white" }]}>Asignación de la Tarea</Text>
                         <View style={{ flexDirection: "row" }}>
                             <View style={{ flex: 1 }}>
-                                <Text style={[styles.label, { zIndex: 20 }]}>Asignación</Text>
+                                <Text style={[profile.modoOscuro === true ? styles.labelClaro : styles.labelOscuro, { zIndex: 20 }]}>Asignación</Text>
                                 <DropDownPicker
                                     open={openTecnicos}
                                     value={valueTecnicos}
@@ -452,7 +444,7 @@ const RegistrarTareasGestor = (navigation, back) => {
                                     setOpen={setOpenTecnicos}
                                     setValue={setValueTecnicos}
                                     placeholder="Selecciona técnico"
-                                    style={[styles.input, styles.inputTecnicos]}
+                                    style={[profile.modoOscuro === true ? styles.inputClaro : styles.inputOscuro, styles.inputTecnicos]}
                                     listMode="SCROLLVIEW"
                                     searchable={true}
                                     searchPlaceholder="Buscar técnico"
@@ -468,7 +460,7 @@ const RegistrarTareasGestor = (navigation, back) => {
                                     dropDownContainerStyle={{
                                         borderColor: "#F2F3F5",
                                         borderWidth: 2,
-                                        backgroundColor: "#fff",
+                                        backgroundColor: profile.modoOscuro === true ? "white" : "#2C2C2C",
                                         borderRadius: 8,
                                     }}
                                     placeholderStyle={{ color: "#606368" }}
@@ -527,12 +519,12 @@ const RegistrarTareasGestor = (navigation, back) => {
                                 </View>
                             ))}
                         </View>
-                        <View style={{ paddingVertical: 15, marginBottom: 20 }}>
+                        <View style={{ paddingTop: 15, marginBottom: 20 }}>
                             <TouchableOpacity
                                 style={[styles.botonSumit, loading && { opacity: 0.1 }]}
                                 onPress={saveTareas}
                             >
-                                <Text style={{ color: 'white', fontWeight: 800, fontSize: 20 }}>Crear Tarea</Text>
+                                <Text style={profile.modoOscuro === true ? { color: 'white', fontWeight: 800, fontSize: 20 } : { color: "#b4b3b3ff", fontWeight: 800, fontSize: 20 }}>Crear Tarea</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -543,12 +535,23 @@ const RegistrarTareasGestor = (navigation, back) => {
 }
 
 const styles = StyleSheet.create({
-    container: {
+    containerClaro: {
         flex: 1,
         backgroundColor: "#FFFFFF",
-        // borderTopLeftRadius: 45,
-        // borderTopRightRadius: 45,
-        // borderWidth: 2,
+        borderTopRightRadius: 35,
+        borderTopLeftRadius: 35,
+        marginTop: -30,
+        paddingBottom: 0,
+        marginBottom: 0,
+    },
+    containerOscuro: {
+        flex: 1,
+        backgroundColor: "#2C2C2C",
+        borderTopRightRadius: 35,
+        borderTopLeftRadius: 35,
+        marginTop: -30,
+        paddingBottom: 0,
+        marginBottom: 0,
     },
     titulo: {
         fontSize: 18,
@@ -557,18 +560,41 @@ const styles = StyleSheet.create({
     containerInputs: {
         marginTop: 10
     },
-    label: {
+    labelClaro: {
         position: "absolute",
         left: 10,
         backgroundColor: "white",
         padding: 4,
+        backgroundColor: "white",
         zIndex: 200,
         fontWeight: 700,
         color: "#898C91",
         fontSize: 16
     },
-    input: {
+    labelOscuro: {
+        position: "absolute",
+        left: 10,
+        backgroundColor: "white",
+        padding: 4,
+        backgroundColor: "#2C2C2C",
+        zIndex: 200,
+        fontWeight: 700,
+        color: "#b4b8c0ff",
+        fontSize: 16
+    },
+    inputClaro: {
         color: "black",
+        marginTop: 15,
+        borderWidth: 2,
+        borderColor: "#F2F3F5",
+        borderRadius: 8,
+        paddingLeft: 12,
+        height: 60,
+        justifyContent: "center",
+        fontSize: 16
+    },
+    inputOscuro: {
+        color: "white",
         marginTop: 15,
         borderWidth: 2,
         borderColor: "#F2F3F5",

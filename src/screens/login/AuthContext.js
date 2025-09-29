@@ -32,6 +32,7 @@ export function AuthProvider({ children }) {
             rol: "Tecnico",
             fechaRegistro: serverTimestamp(),
             modoOscuro: false,
+            IDSucursal: null,
           };
           await setDoc(ref, base);
           setProfile({ id: u.uid, ...base });
@@ -54,6 +55,7 @@ export function AuthProvider({ children }) {
       rol: extra.rol ?? "Tecnico",
       fechaRegistro: serverTimestamp(),
       modoOscuro: extra.modoOscuro ?? false,
+      IDSucursal: extra.IDSucursal ?? null,
       ...extra,
     });
   };
