@@ -1,0 +1,301 @@
+import AntDesign from '@expo/vector-icons/AntDesign';
+import { collection, getDocs, getFirestore } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import DropDownPicker from "react-native-dropdown-picker";
+import appFirebase from '../../credenciales/Credenciales';
+import { useAuth } from "../../screens/login/AuthContext";
+
+const ModalFiltrosAdmin = ({ open, setOpenFiltros }) => {
+    const db = getFirestore(appFirebase);
+    const { profile } = useAuth();
+
+    const [openSucursal, setOpenSucursal] = useState(false);
+    const [valueSucursal, setValueSucursal] = useState(null);
+    const [sucursal, setSucursal] = useState([]);
+    const obtenerSucursales = async () => {
+        try {
+            const querySnapshot = await getDocs(collection(db, "SUCURSAL"));
+            const data = querySnapshot.docs.map(doc => ({
+                label: doc.data().nombre,
+                value: doc.id,
+            }));
+            setSucursal(data);
+
+        } catch (error) {
+            console.error("Error obteniendo sucursales:", error);
+        }
+    };
+
+    useEffect(() => {
+        obtenerSucursales();
+    }, []);
+
+    const [openPrioridad, setOpenPrioridad] = useState(false);
+    const [valuePrioridad, setValuePrioridad] = useState(null);
+    const [prioridad, setPrioridad] = useState([
+        { label: "🔵 Baja", value: "Baja" },
+        { label: "🟡 Media", value: "Media" },
+        { label: "🔴 Alta", value: "Alta" },
+    ]);
+
+    console.log(valuePrioridad)
+
+    const [openEstado, setOpenEstado] = useState(false);
+    const [valueEstado, setValueEstado] = useState(null);
+    const [estado, setEstado] = useState([
+        { label: "🟡 Pendiente", value: "Pendiente" },
+        { label: "🔵 En Proceso", value: "En Proceso" },
+        { label: "🟢 Completada", value: "Completada" },
+        { label: "🟣 Revisada", value: "Revisada" },
+        { label: "🔴 No Entregada", value: "No Entregada" },
+    ]);
+
+    const handleOpenPrioridad = () => {
+        setOpenPrioridad(true);
+        setOpenSucursal(false);
+        setOpenEstado(false);
+    };
+
+    const handleOpenSucursal = () => {
+        setOpenSucursal(true);
+        setOpenPrioridad(false);
+        setOpenEstado(false);
+    };
+
+    const handleOpenEstado = () => {
+        setOpenEstado(true);
+        setOpenSucursal(false);
+        setOpenPrioridad(false);
+    };
+
+    return (
+        <View>
+            <Modal
+                animationType='fade'
+                transparent={true}
+                onRequestClose={() => {
+                    setOpenFiltros(!false);
+                }}
+            >
+                <View style={styles.centeredView}>
+                    <View style={styles.modalView}>
+                        <View style={{ alignItems: "flex-end" }}>
+                            <TouchableOpacity style={{ justifyContent: "center", padding: 4, borderWidth: 2, borderRadius: 8, borderColor: "#F2F3F5" }} onPress={() => setOpenFiltros(false)}>
+                                <AntDesign name="close" size={24} color="black" />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.containerInputs}>
+                            <Text style={[profile.modoOscuro === true ? styles.labelClaro : styles.labelOscuro, { zIndex: 400 }]}>Sucursal</Text>
+                            <DropDownPicker
+                                open={openSucursal}
+                                value={valueSucursal}
+                                items={sucursal}
+                                setOpen={setOpenSucursal}
+                                setValue={setValueSucursal}
+                                setItems={setSucursal}
+                                placeholder="Selecciona sucursal"
+                                style={profile.modoOscuro === true ? styles.inputClaro : styles.inputOscuro}
+                                listMode="SCROLLVIEW"
+                                dropDownContainerStyle={{
+                                    borderColor: "#F2F3F5",
+                                    borderWidth: 2,
+                                    backgroundColor: "#fff",
+                                    borderRadius: 8,
+                                }}
+                                placeholderStyle={{
+                                    color: profile.modoOscuro ? "black" : "#D1D1D1",
+                                    fontSize: 16,
+                                }}
+                                textStyle={{
+                                    color: profile.modoOscuro ? "black" : "#D1D1D1",
+                                    fontSize: 16,
+                                }}
+                                zIndex={399}
+                                zIndexInverse={400}
+                                onOpen={handleOpenSucursal}
+                            />
+                        </View>
+                        <View style={styles.containerInputs}>
+                            <Text style={[profile.modoOscuro === true ? styles.labelClaro : styles.labelOscuro, { zIndex: 350 }]}>Estado</Text>
+                            <DropDownPicker
+                                open={openEstado}
+                                value={valueEstado}
+                                items={estado}
+                                setOpen={setOpenEstado}
+                                setValue={setValueEstado}
+                                setItems={setEstado}
+                                placeholder="Selecciona estado"
+                                style={[
+                                    profile.modoOscuro ? styles.inputOscuro : styles.inputClaro,
+                                    styles.box
+                                ]}
+                                listMode="SCROLLVIEW"
+                                dropDownContainerStyle={{
+                                    borderColor: "#F2F3F5",
+                                    borderWidth: 2,
+                                    backgroundColor: profile.modoOscuro ? "white" : "#2C2C2C",
+                                    borderRadius: 8,
+                                }}
+                                placeholderStyle={{
+                                    color: profile.modoOscuro ? "black" : "#D1D1D1",
+                                    fontSize: 16,
+                                }}
+                                textStyle={{
+                                    color: profile.modoOscuro ? "black" : "#D1D1D1",
+                                    fontSize: 16,
+                                }}
+                                zIndex={340}
+                                zIndexInverse={350}
+                                onOpen={handleOpenEstado}
+                            />
+                        </View>
+                        <View style={styles.containerInputs}>
+                            <Text style={[profile.modoOscuro === true ? styles.labelClaro : styles.labelOscuro, { zIndex: 320 }]}>Prioridad</Text>
+                            <DropDownPicker
+                                open={openPrioridad}
+                                value={valuePrioridad}
+                                items={prioridad}
+                                setOpen={setOpenPrioridad}
+                                setValue={setValuePrioridad}
+                                setItems={setPrioridad}
+                                placeholder="Selecciona prioridad"
+                                style={[
+                                    profile.modoOscuro ? styles.inputOscuro : styles.inputClaro,
+                                    styles.box
+                                ]}
+                                listMode="SCROLLVIEW"
+                                dropDownContainerStyle={{
+                                    borderColor: "#F2F3F5",
+                                    borderWidth: 2,
+                                    backgroundColor: profile.modoOscuro ? "white" : "#2C2C2C",
+                                    borderRadius: 8,
+                                }}
+                                placeholderStyle={{
+                                    color: profile.modoOscuro ? "black" : "#D1D1D1",
+                                    fontSize: 16,
+                                }}
+                                textStyle={{
+                                    color: profile.modoOscuro ? "black" : "#D1D1D1",
+                                    fontSize: 16,
+                                }}
+                                zIndex={100}
+                                zIndexInverse={200}
+                                onOpen={handleOpenPrioridad}
+                            />
+                        </View>
+                        <View style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: 10,
+                        }}>
+                            <TouchableOpacity style={[styles.botonFiltros, { flex: 1 }]}>
+                                <Text style={profile.modoOscuro === true ? { color: 'white', fontWeight: 800, fontSize: 15 } : { color: "#b4b3b3ff", fontWeight: 800, fontSize: 15 }}>Aplicar Filtros</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.botonQuitarfiltros, { flex: 1 }]}>
+                                <Text style={profile.modoOscuro === true ? { color: 'white', fontWeight: 800, fontSize: 15 } : { color: "#b4b3b3ff", fontWeight: 800, fontSize: 15 }}>Quitar Filtros</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+        </View>
+    )
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1
+    },
+    centeredView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    modalView: {
+        padding: 20,
+        backgroundColor: 'white',
+        borderRadius: 20,
+        paddingHorizontal: 15,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+        width: 300,
+    },
+    modalText: {
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    labelClaro: {
+        position: "absolute",
+        left: 10,
+        backgroundColor: "white",
+        padding: 4,
+        backgroundColor: "white",
+        zIndex: 200,
+        fontWeight: 700,
+        color: "#898C91",
+        fontSize: 16,
+    },
+    labelOscuro: {
+        position: "absolute",
+        left: 10,
+        backgroundColor: "white",
+        padding: 4,
+        backgroundColor: "#2C2C2C",
+        zIndex: 200,
+        fontWeight: 700,
+        color: "#b4b8c0ff",
+        fontSize: 16,
+    },
+    inputClaro: {
+        color: "black",
+        marginTop: 15,
+        borderWidth: 2,
+        borderColor: "#F2F3F5",
+        borderRadius: 8,
+        paddingLeft: 12,
+        height: 60,
+        justifyContent: "center",
+        fontSize: 16
+    },
+    inputOscuro: {
+        color: "white",
+        marginTop: 15,
+        borderWidth: 2,
+        borderColor: "#F2F3F5",
+        borderRadius: 8,
+        paddingLeft: 12,
+        height: 60,
+        justifyContent: "center",
+        fontSize: 16
+    },
+    containerInputs: {
+        marginTop: 10,
+    },
+    botonFiltros: {
+        backgroundColor: "#3D67CD",
+        height: 50,
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: 13,
+        marginTop: 10,
+    },
+    botonQuitarfiltros: {
+        backgroundColor: "#6a6a6cff",
+        height: 50,
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: 13,
+        marginTop: 10,
+    },
+})
+
+export default ModalFiltrosAdmin

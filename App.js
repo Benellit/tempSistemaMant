@@ -22,10 +22,10 @@ import UsuariosGestor from "./src/screens/gestor/UsuariosGestor";
 // Técnico
 import HomeTecnico from "./src/screens/tecnico/HomeTecnico";
 // Shared
+import EditTarea from './src/screens/admin/EditTarea';
 import PerfilShared from "./src/screens/shared/PerfilShared";
 import TareaDetails from './src/screens/shared/TareaDetails';
 import TareasShared from "./src/screens/shared/TareasShared";
-import EditTarea from './src/screens/admin/EditTarea';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -164,10 +164,10 @@ function AdminScreens() {
       screenOptions={({ route }) => ({
         tabBarStyle: {
           backgroundColor: profile.modoOscuro === true ? "white" : "#2C2C2C", // 👈 Fondo del tab (modo oscuro)
-          borderTopWidth: 2,   // 👈 elimina la línea superior
+          borderTopWidth: 1,   // 👈 elimina la línea superior
           borderColor: "#D9D9D9",
-          elevation: 0,        // 👈 elimina sombra en Android
-          shadowOpacity: 0,
+          elevation: 20,        // 👈 elimina sombra en Android
+          shadowOpacity: 20,
         },
         headerShown: false,
         tabBarIcon: ({ focused, color, size }) => {
