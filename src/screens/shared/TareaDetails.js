@@ -166,32 +166,32 @@ const TareaDetails = ({ route, navigation }) => {
 
     if (loading) {
         return (
-            <View style={styles.loader}>
+            <View style={profile.modoOscuro === true ? styles.loaderClaro : styles.loaderOscuro}>
                 <ActivityIndicator size="large" color="#007AFF" />
-                <Text>Cargando datos...</Text>
+                <Text style={{color: profile.modoOscuro === true ?  "black" : "#FFFF"}}>Cargando datos...</Text>
             </View>
         );
     }
 
     return (
-        <View style={{ flex: 1, backgroundColor: "white" }}>
-            <View style={{ paddingTop: 40, paddingLeft: 10 }}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="chevron-back" size={24} color="black" />
+        <View style={{ flex: 1, backgroundColor: profile.modoOscuro ? "white" : "#2C2C2C", }}>
+            <View style={{ marginTop: 30, justifyContent: "space-between", flexDirection: "row" }}>
+                <TouchableOpacity style={{ padding: 10 }} onPress={() => navigation.goBack()}>
+                    <Ionicons name="chevron-back" size={24} color={profile.modoOscuro === true ? "black" : "#FFFF"} />
                 </TouchableOpacity>
+                {(profile.rol === "Administrador" || profile.rol === "Gestor") ? (
+                    <TouchableOpacity onPress={() => navigation.navigate("EditTarea", { id: id })} style={{ padding: 10 }}>
+                        <Feather name="edit" size={24} color={profile.modoOscuro === true ? "black" : "#FFFF"} />
+                    </TouchableOpacity>
+                ) : (
+                    <View />
+                )}
             </View>
-            <ScrollView style={{ paddingHorizontal: 15, paddingTop: 15 }}>
+            <ScrollView style={{ paddingHorizontal: 15, paddingTop: 5, borderTopWidth: 1, borderColor: "#D9D9D9", }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                     <View style={{ paddingRight: profile.rol === "Administrador" || profile.rol === "Gestor" ? 10 : 0 }}>
-                        <Text style={styles.nombre}>{tarea.nombre}</Text>
+                        <Text style={profile.modoOscuro === true ? styles.nombreClaro : styles.nombreOscuro}>{tarea.nombre}</Text>
                     </View>
-                    {(profile.rol === "Administrador" || profile.rol === "Gestor") ? (
-                        <TouchableOpacity onPress={() => navigation.navigate("EditTarea", { id: id })} style={{ height: 28 }}>
-                            <Feather name="edit" size={24} color="black" />
-                        </TouchableOpacity>
-                    ) : (
-                        <View />
-                    )}
                 </View>
                 <View style={{ flexDirection: "row", gap: 10, marginVertical: 5 }}>
                     <View>
@@ -202,11 +202,11 @@ const TareaDetails = ({ route, navigation }) => {
                     </View>
                 </View>
                 <View>
-                    <Text style={styles.descripcion}>{tarea.descripcion}</Text>
+                    <Text style={profile.modoOscuro === true ? styles.descripcionClaro : styles.descripcionOscuro}>{tarea.descripcion}</Text>
                 </View>
                 <View style={{ flexDirection: "row", gap: 7, marginTop: 10 }}>
                     <View style={{ alignItems: "center", justifyContent: "center" }}>
-                        <Feather name="calendar" size={20} color={profile.modoOscuro === true ? "#7B7B7B" : "#EDEDED"} />
+                        <Feather name="calendar" size={20} color={profile.modoOscuro === true ? "#7B7B7B" : "#d2d2d2ff"} />
                     </View>
                     <View style={{ alignItems: "center", justifyContent: "center" }}>
                         <Text style={profile.modoOscuro === true ? styles.numerosClaro : styles.numerosOscuro}>
@@ -216,10 +216,10 @@ const TareaDetails = ({ route, navigation }) => {
                 </View>
                 <View style={{ flexDirection: "row", gap: 7, marginBottom: 10 }}>
                     <View style={{ alignItems: "center", justifyContent: "center" }}>
-                        <FontAwesome5 name="user-tie" size={20} color="#7B7B7B" />
+                        <FontAwesome5 name="user-tie" size={20} color={profile.modoOscuro === true ? "#7B7B7B" : "#d2d2d2ff"} />
                     </View>
                     <View style={{ alignItems: "center", justifyContent: "center" }}>
-                        <Text style={profile?.modoOscuro ? styles.numerosClaro : styles.numerosOscuro}>
+                        <Text style={profile.modoOscuro === true ? styles.numerosClaro : styles.numerosOscuro}>
                             Por el {creador?.rol ?? ""}{" "}
                             {[
                                 creador?.primerNombre ?? "",
@@ -255,7 +255,7 @@ const TareaDetails = ({ route, navigation }) => {
                                 }}
                             />
                             <View style={{ justifyContent: "center", paddingLeft: 10 }}>
-                                <Text style={{ color: "white", fontWeight: "500", fontSize: 16 }}>
+                                <Text style={{ color: profile.modoOscuro === true ? "#FFFF" : "black", fontWeight: "500", fontSize: 16 }}>
                                     {[
                                         tecnico.usuario?.primerNombre ?? "",
                                         tecnico.usuario?.segundoNombre ?? "",
@@ -275,29 +275,45 @@ const TareaDetails = ({ route, navigation }) => {
 }
 
 const styles = StyleSheet.create({
-    loader: {
+    loaderClaro: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "white"
     },
+    loaderOscuro: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#2C2C2C"
+    },
     container: {
         flex: 1,
         padding: 20,
     },
-    nombre: {
+    nombreClaro: {
         fontSize: 24,
         fontWeight: 800,
     },
-    descripcion: {
+    nombreOscuro: {
+        fontSize: 24,
+        fontWeight: 800,
+        color: "white"
+    },
+    descripcionClaro: {
         fontSize: 16,
         fontWeight: 400,
+    },
+    descripcionOscuro: {
+        fontSize: 16,
+        fontWeight: 400,
+        color: "white"
     },
     numerosClaro: {
         color: "#7B7B7B"
     },
     numerosOscuro: {
-        color: "#EDEDED"
+        color: "#d2d2d2ff"
     },
     titulo: {
         fontSize: 18,

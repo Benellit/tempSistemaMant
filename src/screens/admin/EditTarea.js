@@ -66,13 +66,13 @@ const EditTarea = ({ route, navigation }) => {
                 <View style={{ paddingTop: 40, paddingLeft: 10 }}>
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
                         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
-                            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+                            <Ionicons name="chevron-back" size={24} color={profile.modoOscuro === true ? "#FFFF" : "black"} />
                         </TouchableOpacity>
                     </View>
 
                     <Text
                         style={{
-                            color: "#FFFFFF",
+                            color: profile.modoOscuro ? "white" : "#2C2C2C",
                             fontSize: 26,
                             fontWeight: "900",
                             marginTop: 5,
@@ -90,9 +90,9 @@ const EditTarea = ({ route, navigation }) => {
 
                     <View style={{ paddingTop: 15, marginBottom: 20 }}>
                         <TouchableOpacity
-                            style={[styles.botonSumit ]}
+                            style={[styles.botonSumit]}
                         >
-                            <Text style={profile.modoOscuro === true ? { color: 'white', fontWeight: 800, fontSize: 20 } : { color: "#b4b3b3ff", fontWeight: 800, fontSize: 20 }}>Aplicar Cambios</Text>
+                            <Text style={profile.modoOscuro === true ? { color: 'white', fontWeight: 800, fontSize: 20 } : { color: "black", fontWeight: 800, fontSize: 20 }}>Aplicar Cambios</Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
@@ -114,6 +114,11 @@ const styles = StyleSheet.create({
     containerOscuro: {
         flex: 1,
         backgroundColor: "#2C2C2C",
+        borderTopRightRadius: 35,
+        borderTopLeftRadius: 35,
+        marginTop: -30,
+        paddingBottom: 0,
+        marginBottom: 0,
     },
     nombre: {
         fontSize: 24,

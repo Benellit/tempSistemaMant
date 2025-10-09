@@ -383,18 +383,18 @@ export default function TareasShared({ navigation }) {
                                         opacity: refreshing ? 0.5 : 1,
                                     }}
                                 >
-                                    <EvilIcons name="close" size={24} color="black" />
+                                    <EvilIcons name="close" size={24} color={profile.modoOscuro === true ? "black" : "#FFFF" } />
                                 </TouchableOpacity>
                             )}
 
 
                             <TouchableOpacity refreshing={refreshing} onPress={onRefresh} style={{ position: "absolute", right: 0, top: 0, backgroundColor: "#87aef0", padding: 10, borderTopRightRadius: 20, borderBottomRightRadius: 20 }}>
-                                <FontAwesome6 name="magnifying-glass" size={16} color={profile.modoOscuro === true ? "black" : "#FFFF"} />
+                                <FontAwesome6 name="magnifying-glass" size={16} color={profile.modoOscuro === true ? "#FFFF" : "black"} />
                             </TouchableOpacity>
                         </View>
                         <View style={{ marginTop: 5, justifyContent: "center", alignContent: "center" }}>
                             <TouchableOpacity style={styles.opciones} onPress={() => { setOpenFiltros(true) }}>
-                                <Ionicons name="options-outline" size={24} color={profile.modoOscuro === true ? "black" : "#FFFF"} />
+                                <Ionicons name="options-outline" size={24} color={profile.modoOscuro === true ? "#FFFF" : "black"} />
                             </TouchableOpacity>
                         </View>
                     </View>

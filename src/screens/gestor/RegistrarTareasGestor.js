@@ -1,6 +1,7 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Fontisto from '@expo/vector-icons/Fontisto';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { LinearGradient } from "expo-linear-gradient";
 import { collection, doc, getDoc, getDocs, getFirestore, query, setDoc, updateDoc, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
@@ -10,7 +11,7 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import appFirebase from '../../credenciales/Credenciales';
 import { useAuth } from "../login/AuthContext";
 
-const RegistrarTareasGestor = ({navigation}) => {
+const RegistrarTareasGestor = ({ navigation }) => {
     const db = getFirestore(appFirebase);
     const { profile } = useAuth();
 
@@ -300,13 +301,13 @@ const RegistrarTareasGestor = ({navigation}) => {
                 <View style={{ paddingTop: 40, paddingLeft: 10 }}>
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
                         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
-                            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+                            <Ionicons name="chevron-back" size={24} color={profile.modoOscuro === true ? "#FFFF" : "black"} />
                         </TouchableOpacity>
                     </View>
 
                     <Text
                         style={{
-                            color: "#FFFFFF",
+                            color: profile.modoOscuro ? "white" : "#2C2C2C",
                             fontSize: 26,
                             fontWeight: "900",
                             marginTop: 5,
@@ -318,7 +319,7 @@ const RegistrarTareasGestor = ({navigation}) => {
                 </View>
             </LinearGradient>
             <View style={profile.modoOscuro === true ? styles.containerClaro : styles.containerOscuro}>
-                <ScrollView style={{ paddingHorizontal: 15, borderTopRightRadius: 35, borderTopLeftRadius: 35, paddingBottom: 0}} nestedScrollEnabled={true}>
+                <ScrollView style={{ paddingHorizontal: 15, borderTopRightRadius: 35, borderTopLeftRadius: 35, paddingBottom: 0 }} nestedScrollEnabled={true}>
                     <View>
                         <Text style={[styles.titulo, { paddingTop: 20 }, { color: profile.modoOscuro === true ? 'black' : "white" }]}>Datos de la Tarea</Text>
                         <View style={styles.containerInputs}>
@@ -352,18 +353,18 @@ const RegistrarTareasGestor = ({navigation}) => {
                                 setItems={setPrioridad}
                                 placeholder="Selecciona prioridad"
                                 style={[
-                                    profile.modoOscuro ? styles.inputOscuro : styles.inputClaro,
+                                    profile.modoOscuro ? styles.inputClaro : styles.inputOscuro,
                                     styles.box
                                 ]}
                                 listMode="SCROLLVIEW"
                                 dropDownContainerStyle={{
                                     borderColor: "#F2F3F5",
                                     borderWidth: 2,
-                                    backgroundColor: profile.modoOscuro ? "white" : "#2C2C2C", // 👈 aquí el cambio
+                                    backgroundColor: profile.modoOscuro ? "white" : "#2C2C2C",
                                     borderRadius: 8,
                                 }}
                                 placeholderStyle={{
-                                    color: profile.modoOscuro ? "black" : "#D1D1D1", // 👈 mejor contraste en oscuro
+                                    color: "#606368",
                                     fontSize: 16,
                                 }}
                                 textStyle={{
@@ -372,6 +373,14 @@ const RegistrarTareasGestor = ({navigation}) => {
                                 }}
                                 zIndex={1000}
                                 zIndexInverse={3000}
+                                ArrowDownIconComponent={() => (
+                                    <MaterialIcons name="keyboard-arrow-down" size={24} color={profile.modoOscuro ? "black" : "white"} />
+
+                                )}
+                                ArrowUpIconComponent={() => (
+                                    <MaterialIcons name="keyboard-arrow-down" size={24} color={profile.modoOscuro ? "black" : "white"} />
+
+                                )}
                                 onOpen={handleOpenPrioridad}
                             />
                         </View>
@@ -385,12 +394,19 @@ const RegistrarTareasGestor = ({navigation}) => {
                                     alignItems: "center",
                                 }}>
                                     <View>
-                                        <Text style={{ fontSize: 16, color: selectedDate ? "#000" : "#606368" }}>
-                                            {selectedDate ? selectedDate.toLocaleString() : "Selecciona fecha y hora"}
-                                        </Text>
+                                        {
+                                            selectedDate ?
+                                                <Text style={{ fontSize: 16, color: profile.modoOscuro ? "black" : "#D1D1D1", }}>
+                                                    {selectedDate ? selectedDate.toLocaleString() : "Selecciona fecha y hora"}
+                                                </Text>
+                                                :
+                                                <Text style={{ fontSize: 16, color: selectedDate ? "#000" : "#606368" }}>
+                                                    {selectedDate ? selectedDate.toLocaleString() : "Selecciona fecha y hora"}
+                                                </Text>
+                                        }
                                     </View>
                                     <View style={{ marginRight: 10 }}>
-                                        <Fontisto name="date" size={20} color="black" />
+                                        <Fontisto name="date" size={20} color={profile.modoOscuro === true ? "black" : "#FFFF"} />
                                     </View>
                                 </View>
                             </TouchableOpacity>
@@ -422,12 +438,27 @@ const RegistrarTareasGestor = ({navigation}) => {
                                 dropDownContainerStyle={{
                                     borderColor: "#F2F3F5",
                                     borderWidth: 2,
-                                    backgroundColor: "#fff",
+                                    backgroundColor: profile.modoOscuro ? "white" : "#2C2C2C",
                                     borderRadius: 8,
                                 }}
-                                placeholderStyle={{ color: "#606368", fontSize: 16 }}
+                                placeholderStyle={{
+                                    color: "#606368",
+                                    fontSize: 16,
+                                }}
+                                textStyle={{
+                                    color: profile.modoOscuro ? "black" : "#D1D1D1",
+                                    fontSize: 16,
+                                }}
                                 zIndex={100}
                                 zIndexInverse={100}
+                                ArrowDownIconComponent={() => (
+                                    <MaterialIcons name="keyboard-arrow-down" size={24} color={profile.modoOscuro ? "black" : "white"} />
+
+                                )}
+                                ArrowUpIconComponent={() => (
+                                    <MaterialIcons name="keyboard-arrow-down" size={24} color={profile.modoOscuro ? "black" : "white"} />
+
+                                )}
                                 onOpen={handleOpenSucursal}
                             />
                         </View>
@@ -460,15 +491,30 @@ const RegistrarTareasGestor = ({navigation}) => {
                                     dropDownContainerStyle={{
                                         borderColor: "#F2F3F5",
                                         borderWidth: 2,
-                                        backgroundColor: profile.modoOscuro === true ? "white" : "#2C2C2C",
+                                        backgroundColor: profile.modoOscuro ? "white" : "#2C2C2C",
                                         borderRadius: 8,
                                     }}
-                                    placeholderStyle={{ color: "#606368" }}
+                                    placeholderStyle={{
+                                        color: "#606368",
+                                        fontSize: 16,
+                                    }}
+                                    textStyle={{
+                                        color: profile.modoOscuro ? "black" : "#D1D1D1",
+                                        fontSize: 16,
+                                    }}
+                                    ArrowDownIconComponent={() => (
+                                        <MaterialIcons name="keyboard-arrow-down" size={24} color={profile.modoOscuro ? "black" : "white"} />
+
+                                    )}
+                                    ArrowUpIconComponent={() => (
+                                        <MaterialIcons name="keyboard-arrow-down" size={24} color={profile.modoOscuro ? "black" : "white"} />
+
+                                    )}
                                     onOpen={handleOpenTecnicos}
                                 />
                             </View>
                             <View style={{ marginTop: 15 }}>
-                                <TouchableOpacity style={styles.masTecnicos} onPress={acomodarArrayConTecnicos}><AntDesign name="plus" size={20} color="white" /></TouchableOpacity>
+                                <TouchableOpacity style={styles.masTecnicos} onPress={acomodarArrayConTecnicos}><AntDesign name="plus" size={20} color={profile.modoOscuro === true ? "#FFFF" : "black"} /></TouchableOpacity>
                             </View>
                         </View>
                         <View>
@@ -491,7 +537,7 @@ const RegistrarTareasGestor = ({navigation}) => {
                                             source={{ uri: tecnico.fotoPerfil }}
                                         />
                                         <View style={{ justifyContent: "center", paddingLeft: 10 }}>
-                                            <Text style={{ color: "white", fontWeight: "500", fontSize: 16 }}>
+                                            <Text style={{ color: profile.modoOscuro ? "white" : "black", fontWeight: "500", fontSize: 16 }}>
                                                 {`${tecnico.primerNombre} ${tecnico.segundoNombre} ${tecnico.primerApellido} ${tecnico.segundoApellido}`}
                                             </Text>
                                         </View>
@@ -514,7 +560,7 @@ const RegistrarTareasGestor = ({navigation}) => {
                                             borderBottomRightRadius: 8,
                                         }}
                                     >
-                                        <AntDesign name="close" size={20} color="white" />
+                                        <AntDesign name="close" size={20} color={profile.modoOscuro === true ? "#FFFF" : "black"} />
                                     </TouchableOpacity>
                                 </View>
                             ))}
@@ -524,7 +570,7 @@ const RegistrarTareasGestor = ({navigation}) => {
                                 style={[styles.botonSumit, loading && { opacity: 0.1 }]}
                                 onPress={saveTareas}
                             >
-                                <Text style={profile.modoOscuro === true ? { color: 'white', fontWeight: 800, fontSize: 20 } : { color: "#b4b3b3ff", fontWeight: 800, fontSize: 20 }}>Crear Tarea</Text>
+                                <Text style={profile.modoOscuro === true ? { color: 'white', fontWeight: 800, fontSize: 20 } : { color: "black", fontWeight: 800, fontSize: 20 }}>Crear Tarea</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -602,7 +648,8 @@ const styles = StyleSheet.create({
         paddingLeft: 12,
         height: 60,
         justifyContent: "center",
-        fontSize: 16
+        fontSize: 16,
+        backgroundColor: "#2C2C2C",
     },
     descripcion: {
         height: 90,
