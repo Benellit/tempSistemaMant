@@ -5,13 +5,13 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from "expo-linear-gradient";
 import { collection, collectionGroup, doc, getDoc, getDocs, getFirestore, orderBy, query, where } from "firebase/firestore";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Dimensions, Image, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import ModalFiltrosAdmin from '../../components/admin/ModalFiltrosAdmin';
 import BotonRegistrar from '../../components/BotonRegistrar';
 import appFirebase from '../../credenciales/Credenciales';
 import { useAuth } from "../login/AuthContext";
-
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function TareasShared({ navigation }) {
     const db = getFirestore(appFirebase);
@@ -35,47 +35,44 @@ export default function TareasShared({ navigation }) {
         return () => console.log("TareasShared desmontado");
     }, []);
 
-
     // Conseguir TAREAS
-    // 🔹 useEffect para cargar tareas al montar el componente
     useEffect(() => {
         getTareas();
     }, []);
 
-    // 🔹 Función principal para obtener tareas
     const getTareas = async () => {
         try {
             let tareaList = [];
 
+            // Obtener tareas según el rol
             if (profile.rol === "Administrador") {
-                if (!busqueda) {
-                    const q = query(collection(db, "TAREA"), orderBy("fechaCreacion", "desc"));
-                    const response = await getDocs(q);
-                    tareaList = response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                } else {
-                    const q = query(collection(db, "TAREA"), orderBy("fechaCreacion", "desc"), where("nombre", ">=", busqueda), where("nombre", "<=", busqueda + '\uf8ff'));
-                    const response = await getDocs(q);
-                    tareaList = response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                }
+                const baseQuery = busqueda
+                    ? query(
+                        collection(db, "TAREA"),
+                        orderBy("fechaCreacion", "desc"),
+                        where("nombre", ">=", busqueda),
+                        where("nombre", "<=", busqueda + '\uf8ff')
+                    )
+                    : query(collection(db, "TAREA"), orderBy("fechaCreacion", "desc"));
+                const response = await getDocs(baseQuery);
+                tareaList = response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
             } else if (profile.rol === "Gestor") {
-                if (!busqueda) {
-                    const q = query(
+                const baseQuery = busqueda
+                    ? query(
+                        collection(db, "TAREA"),
+                        where("IDSucursal", "==", profile.IDSucursal),
+                        where("nombre", ">=", busqueda),
+                        where("nombre", "<=", busqueda + '\uf8ff'),
+                        orderBy("fechaCreacion", "desc")
+                    )
+                    : query(
                         collection(db, "TAREA"),
                         where("IDSucursal", "==", profile.IDSucursal),
                         orderBy("fechaCreacion", "desc")
                     );
-                    const response = await getDocs(q);
-                    tareaList = response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                } else {
-                    const q = query(
-                        collection(db, "TAREA"),
-                        where("IDSucursal", "==", profile.IDSucursal), where("nombre", ">=", busqueda), where("nombre", "<=", busqueda + '\uf8ff'),
-                        orderBy("fechaCreacion", "desc")
-                    );
-                    const response = await getDocs(q);
-                    tareaList = response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                }
-
+                const response = await getDocs(baseQuery);
+                tareaList = response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
             } else if (profile.rol === "Tecnico") {
                 const userRef = doc(db, "USUARIO", profile.id);
@@ -96,151 +93,54 @@ export default function TareasShared({ navigation }) {
                     })
                 );
             } else {
-                // Si el rol no coincide, redirige
                 navigation.navigate("Tabs");
                 return;
             }
 
-            // Ordenar por fecha de creación descendente
-            tareaList.sort((a, b) => b.fechaCreacion.toMillis() - a.fechaCreacion.toMillis());
-            setTareas(tareaList);
+            const tareasConTodo = await Promise.all(
+                tareaList.map(async (tarea) => {
+                    const tareaRef = doc(db, "TAREA", tarea.id);
+
+                    // --- Cargar Técnicos ---
+                    const tecnicosSnap = await getDocs(collection(tareaRef, "Tecnicos"));
+                    const tecnicos = await Promise.all(
+                        tecnicosSnap.docs.map(async (t) => {
+                            const data = t.data();
+                            let usuario = null;
+                            if (data.IDUsuario) {
+                                try {
+                                    const userSnap = await getDoc(data.IDUsuario);
+                                    if (userSnap.exists()) usuario = userSnap.data();
+                                } catch (err) {
+                                    console.error("Error cargando usuario:", err);
+                                }
+                            }
+                            return { id: t.id, ...data, usuario };
+                        })
+                    );
+
+                    // --- Cargar Reportes y Evidencias ---
+                    const [repSnap, eviSnap] = await Promise.all([
+                        getDocs(collection(tareaRef, "Reportes")),
+                        getDocs(collection(tareaRef, "Evidencias"))
+                    ]);
+
+                    return {
+                        ...tarea,
+                        tecnicos,
+                        totalReportes: repSnap.size,
+                        totalEvidencias: eviSnap.size
+                    };
+                })
+            );
+
+            tareasConTodo.sort((a, b) => b.fechaCreacion.toMillis() - a.fechaCreacion.toMillis());
+            setTareas(tareasConTodo);
 
         } catch (error) {
             console.error("Error consiguiendo las Tareas:", error);
         }
     };
-
-
-    // Mostrar Tecnicos por tareas
-    const TecnicosList = React.memo(({ tareaID }) => {
-        const [tecnicos, setTecnicos] = useState([]);
-        useEffect(() => {
-            const fetchTecnicos = async () => {
-                try {
-                    const refTecnicos = collection(db, "TAREA", tareaID, "Tecnicos");
-                    const snap = await getDocs(refTecnicos);
-
-                    const tecnicosData = await Promise.all(
-                        snap.docs.map(async (d) => {
-                            const data = d.data();
-
-                            let usuario = null;
-                            if (data.IDUsuario) {
-                                try {
-                                    const userSnap = await getDoc(data.IDUsuario);
-                                    if (userSnap.exists()) {
-                                        usuario = userSnap.data();
-                                    }
-                                } catch (err) {
-                                    console.error("Error cargando usuario:", err);
-                                }
-                            }
-
-                            return { id: d.id, ...data, usuario };
-                        })
-                    );
-                    setTecnicos(tecnicosData);
-                } catch (error) {
-                    console.error("Error cargando técnicos:", error);
-                }
-            };
-
-            fetchTecnicos();
-        }, [tareaID]);
-
-        return (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {tecnicos.slice(0, 3).map((tecnico, index) => (
-                    <View
-                        key={tecnico.id}
-                        style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            marginLeft: index === 0 ? 0 : -5,
-                        }}
-                    >
-                        <Image
-                            style={{
-                                width: 24,
-                                height: 24,
-                                borderRadius: 100,
-                                borderWidth: 1,
-                                borderColor: "#353335",
-                            }}
-                            source={{
-                                uri:
-                                    tecnico.usuario?.fotoPerfil && tecnico.usuario.fotoPerfil.trim() !== ""
-                                        ? tecnico.usuario.fotoPerfil
-                                        : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
-                            }}
-                        />
-                    </View>
-                ))}
-
-                {tecnicos.length > 3 && (
-                    <View
-                        style={{
-                            width: 24,
-                            height: 24,
-                            borderRadius: 100,
-                            borderWidth: 1,
-                            borderColor: "#353335",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: "#FFFFFF",
-                            marginLeft: -5,
-                            zIndex: 4,
-                        }}
-                    >
-                        <Text style={{ color: "#353335", fontSize: 12, fontWeight: "500" }}>
-                            +{tecnicos.length - 3}
-                        </Text>
-                    </View>
-                )}
-            </View>
-        );
-    });
-
-    // Mostar cantidad de reportes y evidencias por tarea
-    function ReportesYEvidenciasList({ tareaID }) {
-        const [reportes, setReportes] = useState("");
-        const [evidencias, setEvidencias] = useState("");
-        useEffect(() => {
-            const fetchRepYEvi = async () => {
-                try {
-                    const refReporte = collection(db, "TAREA", tareaID, "Reportes");
-                    const responseReportes = await getDocs(refReporte);
-
-                    setReportes(responseReportes.size);
-
-                    const refEvidencias = collection(db, "TAREA", tareaID, "Evidencias");
-                    const responseEvidencias = await getDocs(refEvidencias);
-
-                    setEvidencias(responseEvidencias.size);
-                } catch (error) {
-                    console.error("Error cargando RepYEvi:", error);
-                }
-            };
-
-            fetchRepYEvi();
-        }, [tareaID]);
-
-        return (
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-                <View style={{ flexDirection: "row", gap: 6 }}>
-                    <Feather name="camera" size={18} color={profile.modoOscuro === true ? "#353335" : "#EDEDED"} />
-                    <Text style={profile.modoOscuro === true ? styles.numerosClaro : styles.numerosOscuro}>{evidencias}</Text>
-                </View>
-                <View style={{ flexDirection: "row", gap: 6 }}>
-                    <AntDesign name="book" size={18} color={profile.modoOscuro === true ? "#353335" : "#EDEDED"} />
-                    <Text style={profile.modoOscuro === true ? styles.numerosClaro : styles.numerosOscuro}>{reportes}</Text>
-                </View>
-            </View>
-        );
-    }
-
-
-
 
     const formatFecha = (fecha) => {
         if (!fecha) return "";
@@ -337,8 +237,12 @@ export default function TareasShared({ navigation }) {
     };
 
     const navegarMas = (tareaID) => {
-        navigation.navigate("TareaDetails", { id: tareaID })
+        navigation.navigate("TareaDetails", {
+            id: tareaID,
+            onGoBack: () => onRefresh(), // nombre más claro
+        });
     };
+
 
     useEffect(() => {
         if (busqueda === "") {
@@ -383,7 +287,7 @@ export default function TareasShared({ navigation }) {
                                         opacity: refreshing ? 0.5 : 1,
                                     }}
                                 >
-                                    <EvilIcons name="close" size={24} color={profile.modoOscuro === true ? "black" : "#FFFF" } />
+                                    <EvilIcons name="close" size={24} color={profile.modoOscuro === true ? "black" : "#FFFF"} />
                                 </TouchableOpacity>
                             )}
 
@@ -431,39 +335,115 @@ export default function TareasShared({ navigation }) {
                     }
                 >
                     {tareas.map((tarea) => (
-                        <TouchableOpacity onPress={() => navegarMas(tarea.id)} key={tarea.id} style={profile.modoOscuro === true ? styles.cardsTareasClaro : styles.cardsTareasOscuro}>
+                        <TouchableOpacity
+                            onPress={() => navegarMas(tarea.id)}
+                            key={tarea.id}
+                            style={profile.modoOscuro ? styles.cardsTareasClaro : styles.cardsTareasOscuro}
+                        >
                             <View>
-                                <Text style={profile.modoOscuro === true ? styles.tituloCardClaro : styles.tituloCardOscuro}>{tarea.nombre}</Text>
+                                <Text style={profile.modoOscuro ? styles.tituloCardClaro : styles.tituloCardOscuro}>
+                                    {tarea.nombre}
+                                </Text>
+
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignContent: "center" }}>
                                     <View style={{ flexDirection: "row", gap: 10, marginBottom: 15, marginTop: 5 }}>
-                                        <View>
-                                            <Text style={[{ color: getEstadoStyle(tarea.estado).color, fontWeight: 500, fontSize: 13, backgroundColor: getEstadoStyle(tarea.estado).backgroundColor, paddingVertical: 1, paddingHorizontal: 12, borderRadius: 6 }]}>{tarea.estado}</Text>
-                                        </View>
-                                        <View>
-                                            <Text style={[{ color: getPrioridadStyle(tarea.prioridad).color, fontWeight: 500, fontSize: 13, backgroundColor: getPrioridadStyle(tarea.prioridad).backgroundColor, paddingVertical: 1, paddingHorizontal: 12, borderRadius: 6 }]}>{tarea.prioridad}</Text>
-                                        </View>
+                                        <Text style={[{
+                                            color: getEstadoStyle(tarea.estado).color,
+                                            fontWeight: 500,
+                                            fontSize: 13,
+                                            backgroundColor: getEstadoStyle(tarea.estado).backgroundColor,
+                                            paddingVertical: 1,
+                                            paddingHorizontal: 12,
+                                            borderRadius: 6
+                                        }]}>
+                                            {tarea.estado}
+                                        </Text>
+                                        <Text style={[{
+                                            color: getPrioridadStyle(tarea.prioridad).color,
+                                            fontWeight: 500,
+                                            fontSize: 13,
+                                            backgroundColor: getPrioridadStyle(tarea.prioridad).backgroundColor,
+                                            paddingVertical: 1,
+                                            paddingHorizontal: 12,
+                                            borderRadius: 6
+                                        }]}>
+                                            {tarea.prioridad}
+                                        </Text>
                                     </View>
-                                    <View style={{ justifyContent: "center" }}>
-                                        <ReportesYEvidenciasList tareaID={tarea.id} />
-                                    </View>
-                                </View>
-                                <View style={{ flexDirection: "row", justifyContent: "space-between", alignContent: "center" }}>
-                                    <View style={{ flexDirection: "row", gap: 7 }}>
-                                        <View style={{ alignItems: "center", justifyContent: "center" }}>
-                                            <Feather name="calendar" size={20} color={profile.modoOscuro === true ? "#353335" : "#EDEDED"} />
+
+                                    {/* 📸 Reportes y evidencias */}
+                                    <View style={{ flexDirection: 'row', gap: 10 }}>
+                                        <View style={{ flexDirection: "row", gap: 6 }}>
+                                            <Feather name="camera" size={18} color={profile.modoOscuro ? "#353335" : "#EDEDED"} />
+                                            <Text style={profile.modoOscuro ? styles.numerosClaro : styles.numerosOscuro}>
+                                                {tarea.totalEvidencias}
+                                            </Text>
                                         </View>
-                                        <View style={{ alignItems: "center", justifyContent: "center" }}>
-                                            <Text style={profile.modoOscuro === true ? styles.fechaClaro : styles.fechaOscuro}>
-                                                {formatFecha(tarea.fechaCreacion)} - {formatFecha(tarea.fechaEntrega)}
+                                        <View style={{ flexDirection: "row", gap: 6 }}>
+                                            <AntDesign name="book" size={18} color={profile.modoOscuro ? "#353335" : "#EDEDED"} />
+                                            <Text style={profile.modoOscuro ? styles.numerosClaro : styles.numerosOscuro}>
+                                                {tarea.totalReportes}
                                             </Text>
                                         </View>
                                     </View>
-                                    <TecnicosList tareaID={tarea.id} />
+                                </View>
 
+                                {/* 👨‍🔧 Técnicos */}
+                                <View style={{ flexDirection: "row", justifyContent: "space-between", alignContent: "center" }}>
+                                    <View style={{ flexDirection: "row", gap: 7 }}>
+                                        <Feather name="calendar" size={20} color={profile.modoOscuro ? "#353335" : "#EDEDED"} />
+                                        <Text style={profile.modoOscuro ? styles.fechaClaro : styles.fechaOscuro}>
+                                            {formatFecha(tarea.fechaCreacion)} - {formatFecha(tarea.fechaEntrega)}
+                                        </Text>
+                                    </View>
+
+                                    {/* Avatares técnicos */}
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        {tarea.tecnicos.slice(0, 3).map((tecnico, index) => (
+                                            <Image
+                                                key={tecnico.id}
+                                                style={{
+                                                    width: 24,
+                                                    height: 24,
+                                                    borderRadius: 100,
+                                                    borderWidth: 1,
+                                                    borderColor: "#353335",
+                                                    marginLeft: index === 0 ? 0 : -5,
+                                                }}
+                                                source={{
+                                                    uri:
+                                                        tecnico.usuario?.fotoPerfil && tecnico.usuario.fotoPerfil.trim() !== ""
+                                                            ? tecnico.usuario.fotoPerfil
+                                                            : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+                                                }}
+                                            />
+                                        ))}
+
+                                        {tarea.tecnicos.length > 3 && (
+                                            <View
+                                                style={{
+                                                    width: 24,
+                                                    height: 24,
+                                                    borderRadius: 100,
+                                                    borderWidth: 1,
+                                                    borderColor: "#353335",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    backgroundColor: "#FFFFFF",
+                                                    marginLeft: -5,
+                                                }}
+                                            >
+                                                <Text style={{ color: "#353335", fontSize: 12, fontWeight: "500" }}>
+                                                    +{tarea.tecnicos.length - 3}
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </View>
                                 </View>
                             </View>
                         </TouchableOpacity>
                     ))}
+
                 </ScrollView>
 
                 {/* boton para registrar tareas NO PERMITIDO PARA TECNICOS */}

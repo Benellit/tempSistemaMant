@@ -1,4 +1,5 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { collection, getDocs, getFirestore } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -79,10 +80,10 @@ const ModalFiltrosAdmin = ({ open, setOpenFiltros }) => {
                 }}
             >
                 <View style={styles.centeredView}>
-                    <View style={styles.modalView}>
+                    <View style={profile.modoOscuro === true ? styles.modalViewClaro : styles.modalViewOscuro}>
                         <View style={{ alignItems: "flex-end" }}>
-                            <TouchableOpacity style={{ justifyContent: "center", padding: 4, borderWidth: 2, borderRadius: 8, borderColor: "#F2F3F5" }} onPress={() => setOpenFiltros(false)}>
-                                <AntDesign name="close" size={24} color="black" />
+                            <TouchableOpacity style={{ justifyContent: "center", padding: 4, borderWidth: 1, borderRadius: 8, borderColor: "#D9D9D9" }} onPress={() => setOpenFiltros(false)}>
+                                <AntDesign name="close" size={24} color={profile.modoOscuro ? "black" : "white"} />
                             </TouchableOpacity>
                         </View>
                         <View style={styles.containerInputs}>
@@ -100,7 +101,7 @@ const ModalFiltrosAdmin = ({ open, setOpenFiltros }) => {
                                 dropDownContainerStyle={{
                                     borderColor: "#F2F3F5",
                                     borderWidth: 2,
-                                    backgroundColor: "#fff",
+                                    backgroundColor: profile.modoOscuro ? "white" : "#2C2C2C",
                                     borderRadius: 8,
                                 }}
                                 placeholderStyle={{
@@ -113,6 +114,12 @@ const ModalFiltrosAdmin = ({ open, setOpenFiltros }) => {
                                 }}
                                 zIndex={399}
                                 zIndexInverse={400}
+                                ArrowDownIconComponent={() => (
+                                    <MaterialIcons name="keyboard-arrow-down" size={24} color={profile.modoOscuro ? "black" : "white"} />
+                                )}
+                                ArrowUpIconComponent={() => (
+                                    <MaterialIcons name="keyboard-arrow-down" size={24} color={profile.modoOscuro ? "black" : "white"} />
+                                )}
                                 onOpen={handleOpenSucursal}
                             />
                         </View>
@@ -126,10 +133,7 @@ const ModalFiltrosAdmin = ({ open, setOpenFiltros }) => {
                                 setValue={setValueEstado}
                                 setItems={setEstado}
                                 placeholder="Selecciona estado"
-                                style={[
-                                    profile.modoOscuro ? styles.inputOscuro : styles.inputClaro,
-                                    styles.box
-                                ]}
+                                style={profile.modoOscuro === true ? styles.inputClaro : styles.inputOscuro}
                                 listMode="SCROLLVIEW"
                                 dropDownContainerStyle={{
                                     borderColor: "#F2F3F5",
@@ -147,6 +151,12 @@ const ModalFiltrosAdmin = ({ open, setOpenFiltros }) => {
                                 }}
                                 zIndex={340}
                                 zIndexInverse={350}
+                                ArrowDownIconComponent={() => (
+                                    <MaterialIcons name="keyboard-arrow-down" size={24} color={profile.modoOscuro ? "black" : "white"} />
+                                )}
+                                ArrowUpIconComponent={() => (
+                                    <MaterialIcons name="keyboard-arrow-down" size={24} color={profile.modoOscuro ? "black" : "white"} />
+                                )}
                                 onOpen={handleOpenEstado}
                             />
                         </View>
@@ -160,10 +170,7 @@ const ModalFiltrosAdmin = ({ open, setOpenFiltros }) => {
                                 setValue={setValuePrioridad}
                                 setItems={setPrioridad}
                                 placeholder="Selecciona prioridad"
-                                style={[
-                                    profile.modoOscuro ? styles.inputOscuro : styles.inputClaro,
-                                    styles.box
-                                ]}
+                                style={profile.modoOscuro === true ? styles.inputClaro : styles.inputOscuro}
                                 listMode="SCROLLVIEW"
                                 dropDownContainerStyle={{
                                     borderColor: "#F2F3F5",
@@ -181,6 +188,12 @@ const ModalFiltrosAdmin = ({ open, setOpenFiltros }) => {
                                 }}
                                 zIndex={100}
                                 zIndexInverse={200}
+                                ArrowDownIconComponent={() => (
+                                    <MaterialIcons name="keyboard-arrow-down" size={24} color={profile.modoOscuro ? "black" : "white"} />
+                                )}
+                                ArrowUpIconComponent={() => (
+                                    <MaterialIcons name="keyboard-arrow-down" size={24} color={profile.modoOscuro ? "black" : "white"} />
+                                )}
                                 onOpen={handleOpenPrioridad}
                             />
                         </View>
@@ -189,6 +202,7 @@ const ModalFiltrosAdmin = ({ open, setOpenFiltros }) => {
                             justifyContent: "space-between",
                             alignItems: "center",
                             gap: 10,
+                            marginTop: 10,
                         }}>
                             <TouchableOpacity style={[styles.botonFiltros, { flex: 1 }]}>
                                 <Text style={profile.modoOscuro === true ? { color: 'white', fontWeight: 800, fontSize: 15 } : { color: "#b4b3b3ff", fontWeight: 800, fontSize: 15 }}>Aplicar Filtros</Text>
@@ -214,9 +228,24 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: 'rgba(0,0,0,0.5)',
     },
-    modalView: {
+    modalViewClaro: {
         padding: 20,
         backgroundColor: 'white',
+        borderRadius: 20,
+        paddingHorizontal: 15,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+        width: 300,
+    },
+    modalViewOscuro: {
+        padding: 20,
+        backgroundColor: "#2C2C2C",
         borderRadius: 20,
         paddingHorizontal: 15,
         shadowColor: '#000',
@@ -242,24 +271,23 @@ const styles = StyleSheet.create({
         zIndex: 200,
         fontWeight: 700,
         color: "#898C91",
-        fontSize: 16,
+        fontSize: 16
     },
     labelOscuro: {
         position: "absolute",
         left: 10,
-        backgroundColor: "white",
         padding: 4,
         backgroundColor: "#2C2C2C",
         zIndex: 200,
         fontWeight: 700,
         color: "#b4b8c0ff",
-        fontSize: 16,
+        fontSize: 16
     },
     inputClaro: {
         color: "black",
         marginTop: 15,
-        borderWidth: 2,
-        borderColor: "#F2F3F5",
+        borderWidth: 1,
+        borderColor: "#D9D9D9",
         borderRadius: 8,
         paddingLeft: 12,
         height: 60,
@@ -269,13 +297,14 @@ const styles = StyleSheet.create({
     inputOscuro: {
         color: "white",
         marginTop: 15,
-        borderWidth: 2,
-        borderColor: "#F2F3F5",
+        borderWidth: 1,
+        borderColor: "#D9D9D9",
         borderRadius: 8,
         paddingLeft: 12,
         height: 60,
         justifyContent: "center",
-        fontSize: 16
+        fontSize: 16,
+        backgroundColor: "#2C2C2C",
     },
     containerInputs: {
         marginTop: 10,

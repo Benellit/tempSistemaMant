@@ -631,8 +631,8 @@ const styles = StyleSheet.create({
     inputClaro: {
         color: "black",
         marginTop: 15,
-        borderWidth: 2,
-        borderColor: "#F2F3F5",
+        borderWidth: 1,
+        borderColor: "#D9D9D9",
         borderRadius: 8,
         paddingLeft: 12,
         height: 60,
@@ -642,8 +642,8 @@ const styles = StyleSheet.create({
     inputOscuro: {
         color: "white",
         marginTop: 15,
-        borderWidth: 2,
-        borderColor: "#F2F3F5",
+        borderWidth: 1,
+        borderColor: "#D9D9D9",
         borderRadius: 8,
         paddingLeft: 12,
         height: 60,

@@ -163,10 +163,10 @@ function AdminScreens() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarStyle: {
-          backgroundColor: profile.modoOscuro === true ? "white" : "#2C2C2C", // 👈 Fondo del tab (modo oscuro)
-          borderTopWidth: 1,   // 👈 elimina la línea superior
+          backgroundColor: profile.modoOscuro === true ? "white" : "#2C2C2C",
+          borderTopWidth: 1,
           borderColor: "#D9D9D9",
-          elevation: 20,        // 👈 elimina sombra en Android
+          elevation: 20,
           shadowOpacity: 20,
         },
         headerShown: false,
@@ -213,6 +213,13 @@ function GestorScreens() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        tabBarStyle: {
+          backgroundColor: profile.modoOscuro === true ? "white" : "#2C2C2C",
+          borderTopWidth: 1,
+          borderColor: "#D9D9D9",
+          elevation: 20,
+          shadowOpacity: 20,
+        },
         headerShown: false,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
@@ -246,6 +253,13 @@ function TecnicoScreens() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        tabBarStyle: {
+          backgroundColor: profile.modoOscuro === true ? "white" : "#2C2C2C",
+          borderTopWidth: 1,
+          borderColor: "#D9D9D9",
+          elevation: 20,
+          shadowOpacity: 20,
+        },
         headerShown: false,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
