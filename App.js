@@ -22,6 +22,7 @@ import UsuariosGestor from "./src/screens/gestor/UsuariosGestor";
 // Técnico
 import HomeTecnico from "./src/screens/tecnico/HomeTecnico";
 // Shared
+import PerfilUsuarioShared from './src/screens/shared/PerfilUsuarioShared';
 import EditTarea from './src/screens/admin/EditTarea';
 import PerfilShared from "./src/screens/shared/PerfilShared";
 import TareaDetails from './src/screens/shared/TareaDetails';
@@ -137,6 +138,11 @@ function AppStack() {
         options={{
           headerShown: false
         }}
+      />
+      <Stack.Screen
+        name="PerfilUsuarioShared"
+        component={PerfilUsuarioShared}
+        options={{ headerShown: false }} // o true si quieres header
       />
       <Stack.Screen name="EditTarea" component={EditTarea}
         options={{

@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   StyleSheet, Text, View, TouchableOpacity, ImageBackground,
-  Pressable, Linking, Platform, StatusBar, Animated, Dimensions, TextInput, ActivityIndicator
+  Pressable, Linking, Platform, StatusBar, Animated, Dimensions,
+  TextInput, ActivityIndicator, KeyboardAvoidingView, ScrollView
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -19,52 +20,57 @@ export default function Login() {
   const handleTerms  = () => Linking.openURL("https://example.com/terms");
 
   return (
-    <View style={styles.root}>
-      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+    >
+      <View style={styles.root}>
+        <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
 
-      <ImageBackground
-        source={require("../../../assets/images/loginBackground.png")}
-        style={styles.bg}
-        resizeMode="cover"
-      >
-        <LinearGradient
-          colors={["rgba(255,255,255,0)", "rgba(255,255,255,0.85)", "rgba(255,255,255,1)"]}
-          locations={[0.4, 0.75, 1]}
-          style={styles.fade}
+        <ImageBackground
+          source={require("../../../assets/images/loginBackground.png")}
+          style={styles.bg}
+          resizeMode="cover"
+        >
+          <LinearGradient
+            colors={["rgba(255,255,255,0)", "rgba(255,255,255,0.85)", "rgba(255,255,255,1)"]}
+            locations={[0.4, 0.75, 1]}
+            style={styles.fade}
+          />
+
+          <View style={styles.bottomContent}>
+            <Text style={styles.title}>{APP_NAME}</Text>
+            <Text style={styles.subtitle}>{APP_TAGLINE}</Text>
+
+            <Pressable
+              onPress={() => setShowSheet(true)}
+              style={({ pressed }) => [styles.primaryBtn, pressed && { opacity: 0.9 }]}
+            >
+              <Text style={styles.primaryBtnText}>Comenzar</Text>
+            </Pressable>
+
+            <Text style={styles.terms}>
+              Al usar {APP_NAME} aceptas la{" "}
+              <Text style={styles.link} onPress={handlePolicy}>Política de Privacidad</Text> y los{" "}
+              <Text style={styles.link} onPress={handleTerms}>Términos de Uso</Text>.
+            </Text>
+          </View>
+        </ImageBackground>
+
+        <BottomSheetLogin
+          visible={showSheet}
+          onClose={() => setShowSheet(false)}
         />
-
-        <View style={styles.bottomContent}>
-          <Text style={styles.title}>{APP_NAME}</Text>
-          <Text style={styles.subtitle}>{APP_TAGLINE}</Text>
-
-          <Pressable
-            onPress={() => setShowSheet(true)}
-            style={({ pressed }) => [styles.primaryBtn, pressed && { opacity: 0.9 }]}
-          >
-            <Text style={styles.primaryBtnText}>Comenzar</Text>
-          </Pressable>
-
-          {/* Quitar accesos directos por rol; Gate se encarga del routing tras login */}
-          <Text style={styles.terms}>
-            Al usar {APP_NAME} aceptas la{" "}
-            <Text style={styles.link} onPress={handlePolicy}>Política de Privacidad</Text> y los{" "}
-            <Text style={styles.link} onPress={handleTerms}>Términos de Uso</Text>.
-          </Text>
-        </View>
-      </ImageBackground>
-
-      <BottomSheetLogin
-        visible={showSheet}
-        onClose={() => setShowSheet(false)}
-      />
-    </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 /* ===================== Bottom Sheet ===================== */
 
 function BottomSheetLogin({ visible, onClose }) {
-  const { login } = useAuth();                 // ★ usamos Auth real
+  const { login } = useAuth();
   const SHEET_MAX = useMemo(() => Math.min(SCREEN_HEIGHT * 0.42, 640), []);
   const translateY = useRef(new Animated.Value(SHEET_MAX)).current;
   const backdrop   = useRef(new Animated.Value(0)).current;
@@ -72,8 +78,8 @@ function BottomSheetLogin({ visible, onClose }) {
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [showPwd, setShowPwd] = useState(false);
-  const [submitting, setSubmitting] = useState(false); // ★
-  const [error, setError] = useState("");              // ★
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (visible) {
@@ -99,7 +105,7 @@ function BottomSheetLogin({ visible, onClose }) {
     return "Error al iniciar sesión.";
   };
 
-  const onLogin = async () => {               // ★ login real
+  const onLogin = async () => {
     setError("");
     if (!email.trim() || !pwd) {
       setError("Ingresa tu correo y contraseña.");
@@ -108,7 +114,7 @@ function BottomSheetLogin({ visible, onClose }) {
     setSubmitting(true);
     try {
       await login(email.trim(), pwd);
-      onClose(); // Gate enruta según rol automáticamente
+      onClose();
     } catch (e) {
       setError(mapAuthError(e));
     } finally {
@@ -135,7 +141,10 @@ function BottomSheetLogin({ visible, onClose }) {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.sheetBody}>
+        <ScrollView
+          contentContainerStyle={styles.sheetBody}
+          keyboardShouldPersistTaps="handled"
+        >
           <Text style={styles.sheetTitle}>Inicia sesión</Text>
           <Text style={styles.sheetSubtitle}>Accede a tu cuenta para continuar.</Text>
 
@@ -172,20 +181,19 @@ function BottomSheetLogin({ visible, onClose }) {
           {!!error && <Text style={{ color: RED, marginTop: 10 }}>{error}</Text>}
 
           <Pressable onPress={onLogin} disabled={submitting}
-            style={({ pressed }) => [styles.loginBtn, (pressed || submitting) && { opacity: 0.9 }]}>
-            {submitting ? <ActivityIndicator size="small" color="#fff" /> : <Feather name="log-in" size={18} color="#fff" style={{ marginRight: 8 }} />}
+            style={({ pressed }) => [styles.loginBtn, (pressed || submitting) && { opacity: 0.9 }]}
+          >
+            {submitting ? <ActivityIndicator size="small" color="#fff" /> :
+              <Feather name="log-in" size={18} color="#fff" style={{ marginRight: 8 }} />}
             <Text style={styles.loginBtnText}>{submitting ? "Ingresando..." : "Iniciar sesión"}</Text>
           </Pressable>
-
-          {/* opcional: enlace a "Olvidé mi contraseña" si luego agregas reset */}
-          {/* <Text onPress={() => navigation.navigate('ForgotPassword')} style={{ marginTop: 10, textAlign:'center', color:'#6b7280' }}>¿Olvidaste tu contraseña?</Text> */}
-        </View>
+        </ScrollView>
       </Animated.View>
     </>
   );
 }
 
-/* ===================== Estilos (idénticos) ===================== */
+/* ===================== Estilos ===================== */
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#fff" },
   bg: { flex: 1, justifyContent: "flex-end" },

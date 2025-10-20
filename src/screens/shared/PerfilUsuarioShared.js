@@ -3,6 +3,7 @@ import {
   ActivityIndicator, 
   Alert, 
   Image, 
+  Modal,
   ScrollView, 
   StyleSheet, 
   Switch, 
@@ -11,23 +12,32 @@ import {
   TouchableOpacity, 
   View 
 } from "react-native";
-import { useAuth } from "../login/AuthContext";
-import { doc, updateDoc, getFirestore } from "firebase/firestore";
-import appFirebase from "../../credenciales/Credenciales";
-import { cloudinaryConfig } from "../../credenciales/Credenciales";
-import * as ImagePicker from 'expo-image-picker';
+import { doc, getDoc, updateDoc, getFirestore } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
+import appFirebase, { cloudinaryConfig } from "../../credenciales/Credenciales";
+import * as ImagePicker from "expo-image-picker";
 import Feather from '@expo/vector-icons/Feather';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useAuth } from "../login/AuthContext";
 
 const db = getFirestore(appFirebase);
 
-export default function PerfilShared({ navigation }) {
-  const { logout, profile } = useAuth();
+export default function PerfilUsuarioShared({ route, navigation }) {
+  const { profile: currentUserProfile } = useAuth();
+  const { userId } = route.params; // ID del usuario a visualizar/editar
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [sucursales, setSucursales] = useState([]);
+  const [showRolModal, setShowRolModal] = useState(false);
+  const [showSucursalModal, setShowSucursalModal] = useState(false);
+  const [showEstadoModal, setShowEstadoModal] = useState(false);
+
+  const roles = ["Tecnico", "Gestor", "Administrador"];
+  const estados = ["Activo", "Inactivo"];
   
   // Estados para los campos del perfil
   const [userData, setUserData] = useState({
@@ -42,36 +52,93 @@ export default function PerfilShared({ navigation }) {
     estado: "",
     modoOscuro: false,
     IDSucursal: null,
+    sucursalNombre: "",
     fechaRegistro: null
   });
 
-  // Cargar datos del usuario desde el profile del contexto
+  // Verificar si el usuario actual puede editar
+  const canEdit = currentUserProfile?.rol === "Gestor" || currentUserProfile?.rol === "Administrador";
+
+  // Cargar sucursales
   useEffect(() => {
-    if (profile) {
-      setUserData({
-        primerNombre: profile.primerNombre || "",
-        segundoNombre: profile.segundoNombre || "",
-        primerApellido: profile.primerApellido || "",
-        segundoApellido: profile.segundoApellido || "",
-        email: profile.email || "",
-        numTel: profile.numTel || "",
-        fotoPerfil: profile.fotoPerfil || "",
-        rol: profile.rol || "",
-        estado: profile.estado || "",
-        modoOscuro: profile.modoOscuro || false,
-        IDSucursal: profile.IDSucursal || null,
-        fechaRegistro: profile.fechaRegistro || null
-      });
-      setLoading(false);
-    }
-  }, [profile]);
+    const loadSucursales = async () => {
+      try {
+        const sucursalesSnapshot = await getDocs(collection(db, "SUCURSAL"));
+        const sucursalesData = sucursalesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setSucursales(sucursalesData);
+      } catch (error) {
+        console.error("Error cargando sucursales:", error);
+      }
+    };
+
+    loadSucursales();
+  }, []);
+
+  // Cargar datos del usuario desde Firestore
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const userDoc = await getDoc(doc(db, "USUARIO", userId));
+        
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          
+          // Obtener nombre de sucursal si existe la referencia
+          let sucursalNombre = "";
+          if (data.IDSucursal) {
+            try {
+              const sucursalDoc = await getDoc(data.IDSucursal);
+              if (sucursalDoc.exists()) {
+                sucursalNombre = sucursalDoc.data().nombre || sucursalDoc.id;
+              }
+            } catch (error) {
+              console.error("Error cargando sucursal:", error);
+            }
+          }
+
+          setUserData({
+            primerNombre: data.primerNombre || "",
+            segundoNombre: data.segundoNombre || "",
+            primerApellido: data.primerApellido || "",
+            segundoApellido: data.segundoApellido || "",
+            email: data.email || "",
+            numTel: data.numTel || "",
+            fotoPerfil: data.fotoPerfil || "",
+            rol: data.rol || "",
+            estado: data.estado || "",
+            modoOscuro: data.modoOscuro || false,
+            IDSucursal: data.IDSucursal?.id || null,
+            sucursalNombre: sucursalNombre,
+            fechaRegistro: data.fechaRegistro || null
+          });
+        } else {
+          Alert.alert("Error", "Usuario no encontrado");
+          navigation.goBack();
+        }
+      } catch (error) {
+        console.error("Error al cargar perfil:", error);
+        Alert.alert("Error", "No se pudo cargar la información del perfil");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, [userId]);
 
   // Función para subir imagen a Cloudinary
   const uploadImageToCloudinary = async (uri) => {
     try {
       const formData = new FormData();
       
-      // Crear el objeto de archivo para React Native
       const file = {
         uri,
         type: 'image/jpeg',
@@ -192,7 +259,7 @@ export default function PerfilShared({ navigation }) {
 
   // Guardar cambios en Firestore
   const handleSave = async () => {
-    if (!profile?.id) return;
+    if (!userId) return;
 
     // Validación básica
     if (!userData.primerNombre.trim() || !userData.primerApellido.trim()) {
@@ -200,9 +267,16 @@ export default function PerfilShared({ navigation }) {
       return;
     }
 
+    if (!userData.IDSucursal) {
+      Alert.alert("Error", "Debe seleccionar una sucursal");
+      return;
+    }
+
     setSaving(true);
     try {
-      const userRef = doc(db, "USUARIO", profile.id);
+      const userRef = doc(db, "USUARIO", userId);
+      const sucursalRef = doc(db, "SUCURSAL", userData.IDSucursal);
+      
       await updateDoc(userRef, {
         primerNombre: userData.primerNombre.trim(),
         segundoNombre: userData.segundoNombre.trim(),
@@ -210,6 +284,9 @@ export default function PerfilShared({ navigation }) {
         segundoApellido: userData.segundoApellido.trim(),
         numTel: userData.numTel.trim(),
         fotoPerfil: userData.fotoPerfil.trim(),
+        rol: userData.rol,
+        estado: userData.estado,
+        IDSucursal: sucursalRef,
         modoOscuro: userData.modoOscuro
       });
 
@@ -236,24 +313,21 @@ export default function PerfilShared({ navigation }) {
     );
   }
 
-  if (!profile) {
-    return (
-      <View style={styles.container}>
-        <Text>No hay sesión activa</Text>
-      </View>
-    );
-  }
-
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Mi Perfil</Text>
-        <TouchableOpacity 
-          onPress={() => setIsEditing(!isEditing)}
-          style={styles.editButton}
-        >
-          <Feather name={isEditing ? "x" : "edit-2"} size={24} color="#007AFF" />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Feather name="arrow-left" size={24} color="#007AFF" />
         </TouchableOpacity>
+        <Text style={styles.title}>Perfil de Usuario</Text>
+        {canEdit && (
+          <TouchableOpacity 
+            onPress={() => setIsEditing(!isEditing)}
+            style={styles.editButton}
+          >
+            <Feather name={isEditing ? "x" : "edit-2"} size={24} color="#007AFF" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Foto de perfil */}
@@ -277,7 +351,7 @@ export default function PerfilShared({ navigation }) {
           )}
         </View>
 
-        {isEditing && !uploadingImage && (
+        {canEdit && isEditing && !uploadingImage && (
           <TouchableOpacity 
             style={styles.changePhotoButton}
             onPress={handleChangePhoto}
@@ -296,7 +370,7 @@ export default function PerfilShared({ navigation }) {
             style={[styles.input, !isEditing && styles.inputDisabled]}
             value={userData.primerNombre}
             onChangeText={(text) => setUserData(prev => ({ ...prev, primerNombre: text }))}
-            editable={isEditing}
+            editable={canEdit && isEditing}
             placeholder="Ingrese primer nombre"
           />
         </View>
@@ -307,7 +381,7 @@ export default function PerfilShared({ navigation }) {
             style={[styles.input, !isEditing && styles.inputDisabled]}
             value={userData.segundoNombre}
             onChangeText={(text) => setUserData(prev => ({ ...prev, segundoNombre: text }))}
-            editable={isEditing}
+            editable={canEdit && isEditing}
             placeholder="Ingrese segundo nombre"
           />
         </View>
@@ -318,7 +392,7 @@ export default function PerfilShared({ navigation }) {
             style={[styles.input, !isEditing && styles.inputDisabled]}
             value={userData.primerApellido}
             onChangeText={(text) => setUserData(prev => ({ ...prev, primerApellido: text }))}
-            editable={isEditing}
+            editable={canEdit && isEditing}
             placeholder="Ingrese primer apellido"
           />
         </View>
@@ -329,7 +403,7 @@ export default function PerfilShared({ navigation }) {
             style={[styles.input, !isEditing && styles.inputDisabled]}
             value={userData.segundoApellido}
             onChangeText={(text) => setUserData(prev => ({ ...prev, segundoApellido: text }))}
-            editable={isEditing}
+            editable={canEdit && isEditing}
             placeholder="Ingrese segundo apellido"
           />
         </View>
@@ -340,7 +414,7 @@ export default function PerfilShared({ navigation }) {
             style={[styles.input, !isEditing && styles.inputDisabled]}
             value={userData.numTel}
             onChangeText={(text) => setUserData(prev => ({ ...prev, numTel: text }))}
-            editable={isEditing}
+            editable={canEdit && isEditing}
             placeholder="663-123-4567"
             keyboardType="phone-pad"
           />
@@ -358,27 +432,89 @@ export default function PerfilShared({ navigation }) {
 
         <View style={styles.fieldContainer}>
           <Text style={styles.label}>Rol</Text>
-          <TextInput
-            style={[styles.input, styles.inputDisabled]}
-            value={userData.rol}
-            editable={false}
-          />
+          {canEdit && isEditing ? (
+            <TouchableOpacity
+              style={styles.selectButton}
+              onPress={() => setShowRolModal(true)}
+            >
+              <Text style={styles.selectButtonText}>{userData.rol}</Text>
+              <Feather name="chevron-down" size={20} color="#666" />
+            </TouchableOpacity>
+          ) : (
+            <TextInput
+              style={[styles.input, styles.inputDisabled]}
+              value={userData.rol}
+              editable={false}
+            />
+          )}
+        </View>
+
+        <View style={styles.fieldContainer}>
+          <Text style={styles.label}>Sucursal</Text>
+          {canEdit && isEditing ? (
+            <TouchableOpacity
+              style={styles.selectButton}
+              onPress={() => setShowSucursalModal(true)}
+            >
+              <Text style={styles.selectButtonText}>
+                {userData.sucursalNombre || "Seleccione una sucursal"}
+              </Text>
+              <Feather name="chevron-down" size={20} color="#666" />
+            </TouchableOpacity>
+          ) : (
+            <TextInput
+              style={[styles.input, styles.inputDisabled]}
+              value={userData.sucursalNombre}
+              editable={false}
+            />
+          )}
         </View>
 
         <View style={styles.fieldContainer}>
           <Text style={styles.label}>Estado</Text>
-          <TextInput
-            style={[styles.input, styles.inputDisabled]}
-            value={userData.estado}
-            editable={false}
+          {canEdit && isEditing ? (
+            <TouchableOpacity
+              style={styles.selectButton}
+              onPress={() => setShowEstadoModal(true)}
+            >
+              <Text style={styles.selectButtonText}>{userData.estado}</Text>
+              <Feather name="chevron-down" size={20} color="#666" />
+            </TouchableOpacity>
+          ) : (
+            <TextInput
+              style={[styles.input, styles.inputDisabled]}
+              value={userData.estado}
+              editable={false}
+            />
+          )}
+        </View>
+
+        {/* Switch de modo oscuro */}
+        <View style={styles.switchContainer}>
+          <Text style={styles.label}>
+            {userData.modoOscuro ? "Modo Oscuro" : "Modo Claro"}
+          </Text>
+          <Switch
+            value={userData.modoOscuro}
+            onValueChange={toggleSwitch}
+            trackColor={{ false: "#767577", true: "#81b0ff" }}
+            thumbColor={userData.modoOscuro ? "#f5dd4b" : "#f4f3f4"}
+            disabled={!canEdit || !isEditing}
           />
         </View>
 
-
+        {userData.fechaRegistro && (
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Fecha de Registro</Text>
+            <Text style={styles.infoText}>
+              {userData.fechaRegistro?.toDate?.()?.toLocaleDateString() || "N/A"}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Botones de acción */}
-      {isEditing && (
+      {canEdit && isEditing && (
         <TouchableOpacity 
           style={[styles.saveButton, saving && styles.saveButtonDisabled]}
           onPress={handleSave}
@@ -392,14 +528,120 @@ export default function PerfilShared({ navigation }) {
         </TouchableOpacity>
       )}
 
-      <TouchableOpacity 
-        style={styles.logoutButton}
-        onPress={logout}
-      >
-        <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
-      </TouchableOpacity>
-
       <View style={{ height: 40 }} />
+
+      {/* Modal para seleccionar Rol */}
+      <Modal
+        visible={showRolModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowRolModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Seleccionar Rol</Text>
+            {roles.map((rol) => (
+              <TouchableOpacity
+                key={rol}
+                style={styles.modalOption}
+                onPress={() => {
+                  setUserData((prev) => ({ ...prev, rol }));
+                  setShowRolModal(false);
+                }}
+              >
+                <Text style={styles.modalOptionText}>{rol}</Text>
+                {userData.rol === rol && (
+                  <Feather name="check" size={20} color="#007AFF" />
+                )}
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowRolModal(false)}
+            >
+              <Text style={styles.modalCloseButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal para seleccionar Sucursal */}
+      <Modal
+        visible={showSucursalModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSucursalModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Seleccionar Sucursal</Text>
+            <ScrollView style={styles.modalScroll}>
+              {sucursales.map((sucursal) => (
+                <TouchableOpacity
+                  key={sucursal.id}
+                  style={styles.modalOption}
+                  onPress={() => {
+                    setUserData((prev) => ({
+                      ...prev,
+                      IDSucursal: sucursal.id,
+                      sucursalNombre: sucursal.nombre || sucursal.id,
+                    }));
+                    setShowSucursalModal(false);
+                  }}
+                >
+                  <Text style={styles.modalOptionText}>
+                    {sucursal.nombre || sucursal.id}
+                  </Text>
+                  {userData.IDSucursal === sucursal.id && (
+                    <Feather name="check" size={20} color="#007AFF" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowSucursalModal(false)}
+            >
+              <Text style={styles.modalCloseButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal para seleccionar Estado */}
+      <Modal
+        visible={showEstadoModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowEstadoModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Seleccionar Estado</Text>
+            {estados.map((estado) => (
+              <TouchableOpacity
+                key={estado}
+                style={styles.modalOption}
+                onPress={() => {
+                  setUserData((prev) => ({ ...prev, estado }));
+                  setShowEstadoModal(false);
+                }}
+              >
+                <Text style={styles.modalOptionText}>{estado}</Text>
+                {userData.estado === estado && (
+                  <Feather name="check" size={20} color="#007AFF" />
+                )}
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowEstadoModal(false)}
+            >
+              <Text style={styles.modalCloseButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -429,10 +671,15 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     backgroundColor: "#fff",
   },
+  backButton: {
+    padding: 8,
+  },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "700",
     color: "#333",
+    flex: 1,
+    marginLeft: 10,
   },
   editButton: {
     padding: 8,
@@ -506,12 +753,33 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
     color: "#666",
   },
+  selectButton: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: "#fff",
+  },
+  selectButtonText: {
+    fontSize: 16,
+    color: "#333",
+  },
   switchContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,
     paddingVertical: 10,
+  },
+  infoText: {
+    fontSize: 16,
+    color: "#666",
+    padding: 12,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 8,
   },
   saveButton: {
     backgroundColor: "#007AFF",
@@ -529,17 +797,49 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  logoutButton: {
-    backgroundColor: "#d9534f",
-    marginHorizontal: 20,
-    marginTop: 20,
-    padding: 16,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: "70%",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  modalScroll: {
+    maxHeight: 300,
+  },
+  modalOption: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  modalOptionText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  modalCloseButton: {
+    marginTop: 15,
+    padding: 15,
+    backgroundColor: "#f0f0f0",
     borderRadius: 8,
     alignItems: "center",
   },
-  logoutButtonText: {
-    color: "#fff",
+  modalCloseButtonText: {
     fontSize: 16,
+    color: "#666",
     fontWeight: "600",
   },
 });
