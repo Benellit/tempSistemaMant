@@ -6,7 +6,6 @@ import {
   Modal,
   ScrollView, 
   StyleSheet, 
-  Switch, 
   Text, 
   TextInput, 
   TouchableOpacity, 
@@ -300,10 +299,6 @@ export default function PerfilUsuarioShared({ route, navigation }) {
     }
   };
 
-  const toggleSwitch = (value) => {
-    setUserData(prev => ({ ...prev, modoOscuro: value }));
-  };
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -487,20 +482,6 @@ export default function PerfilUsuarioShared({ route, navigation }) {
               editable={false}
             />
           )}
-        </View>
-
-        {/* Switch de modo oscuro */}
-        <View style={styles.switchContainer}>
-          <Text style={styles.label}>
-            {userData.modoOscuro ? "Modo Oscuro" : "Modo Claro"}
-          </Text>
-          <Switch
-            value={userData.modoOscuro}
-            onValueChange={toggleSwitch}
-            trackColor={{ false: "#767577", true: "#81b0ff" }}
-            thumbColor={userData.modoOscuro ? "#f5dd4b" : "#f4f3f4"}
-            disabled={!canEdit || !isEditing}
-          />
         </View>
 
         {userData.fechaRegistro && (
@@ -766,13 +747,6 @@ const styles = StyleSheet.create({
   selectButtonText: {
     fontSize: 16,
     color: "#333",
-  },
-  switchContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-    paddingVertical: 10,
   },
   infoText: {
     fontSize: 16,
