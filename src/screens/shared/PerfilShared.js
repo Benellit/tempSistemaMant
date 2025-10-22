@@ -244,159 +244,175 @@ export default function PerfilShared({ navigation }) {
     );
   }
 
-  return (
-    <ScrollView style={styles.container}>
+ return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <View style={styles.header}>
         <Text style={styles.title}>Mi Perfil</Text>
-        <TouchableOpacity 
-          onPress={() => setIsEditing(!isEditing)}
-          style={styles.editButton}
-        >
-          <Feather name={isEditing ? "x" : "edit-2"} size={24} color="#007AFF" />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            onPress={() => setIsEditing(!isEditing)}
+            style={[styles.editButton, isEditing && styles.editButtonActive]}
+          >
+            <Feather name={isEditing ? "x" : "edit-2"} size={18} color="#007AFF" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.darkModeToggle,
+              userData.modoOscuro && styles.darkModeToggleActive,
+              !isEditing && styles.darkModeToggleDisabled
+            ]}
+            onPress={() => {
+              if (!isEditing) return;
+              toggleSwitch(!userData.modoOscuro);
+            }}
+            activeOpacity={isEditing ? 0.8 : 1}
+          >
+            <Ionicons
+              name={userData.modoOscuro ? "moon" : "sunny"}
+              size={18}
+              color={userData.modoOscuro ? "#fff" : "#1f2937"}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Foto de perfil */}
-      <View style={styles.photoContainer}>
-        <View style={styles.photoWrapper}>
-          {userData.fotoPerfil ? (
-            <Image 
-              source={{ uri: userData.fotoPerfil }} 
-              style={styles.profilePhoto}
-            />
-          ) : (
-            <View style={[styles.profilePhoto, styles.photoPlaceholder]}>
-              <AntDesign name="user" size={60} color="#999" />
-            </View>
-          )}
-          
-          {uploadingImage && (
-            <View style={styles.uploadingOverlay}>
-              <ActivityIndicator size="large" color="#fff" />
-            </View>
+      <View style={styles.photoSection}>
+        <View style={styles.photoCard}>
+          <View style={styles.photoWrapper}>
+            {userData.fotoPerfil ? (
+              <Image
+                source={{ uri: userData.fotoPerfil }}
+                style={styles.profilePhoto}
+              />
+            ) : (
+              <View style={[styles.profilePhoto, styles.photoPlaceholder]}>
+                <AntDesign name="user" size={60} color="#999" />
+              </View>
+            )}
+
+            {uploadingImage && (
+              <View style={styles.uploadingOverlay}>
+                <ActivityIndicator size="large" color="#fff" />
+              </View>
+            )}
+          </View>
+
+          {isEditing && !uploadingImage && (
+            <TouchableOpacity
+              style={styles.changePhotoButton}
+              onPress={handleChangePhoto}
+            >
+              <Ionicons name="camera" size={20} color="#007AFF" />
+              <Text style={styles.changePhotoText}>Cambiar foto</Text>
+            </TouchableOpacity>
           )}
         </View>
-
-        {isEditing && !uploadingImage && (
-          <TouchableOpacity 
-            style={styles.changePhotoButton}
-            onPress={handleChangePhoto}
-          >
-            <Ionicons name="camera" size={20} color="#007AFF" />
-            <Text style={styles.changePhotoText}>Cambiar foto</Text>
-          </TouchableOpacity>
-        )}
       </View>
 
       {/* Campos editables */}
       <View style={styles.form}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Datos personales</Text>
-          <View style={styles.fieldRow}>
-            <View style={[styles.fieldContainer, styles.fieldHalf]}>
-              <Text style={styles.label}>Primer Nombre *</Text>
-              <TextInput
-                style={[styles.input, !isEditing && styles.inputDisabled]}
-                value={userData.primerNombre}
-                onChangeText={(text) => setUserData(prev => ({ ...prev, primerNombre: text }))}
-                editable={isEditing}
-                placeholder="Ingrese primer nombre"
-              />
-            </View>
+  <View style={styles.cardCombined}>
+    {/* --- Datos personales --- */}
+    <Text style={styles.sectionTitle}>Datos personales</Text>
 
-            <View style={[styles.fieldContainer, styles.fieldHalf]}>
-              <Text style={styles.label}>Segundo Nombre</Text>
-              <TextInput
-                style={[styles.input, !isEditing && styles.inputDisabled]}
-                value={userData.segundoNombre}
-                onChangeText={(text) => setUserData(prev => ({ ...prev, segundoNombre: text }))}
-                editable={isEditing}
-                placeholder="Ingrese segundo nombre"
-              />
-            </View>
-          </View>
-
-          <View style={styles.fieldRow}>
-            <View style={[styles.fieldContainer, styles.fieldHalf]}>
-              <Text style={styles.label}>Primer Apellido *</Text>
-              <TextInput
-                style={[styles.input, !isEditing && styles.inputDisabled]}
-                value={userData.primerApellido}
-                onChangeText={(text) => setUserData(prev => ({ ...prev, primerApellido: text }))}
-                editable={isEditing}
-                placeholder="Ingrese primer apellido"
-              />
-            </View>
-
-            <View style={[styles.fieldContainer, styles.fieldHalf]}>
-              <Text style={styles.label}>Segundo Apellido</Text>
-              <TextInput
-                style={[styles.input, !isEditing && styles.inputDisabled]}
-                value={userData.segundoApellido}
-                onChangeText={(text) => setUserData(prev => ({ ...prev, segundoApellido: text }))}
-                editable={isEditing}
-                placeholder="Ingrese segundo apellido"
-              />
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Datos de contacto</Text>
-          <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Teléfono</Text>
-            <TextInput
-              style={[styles.input, !isEditing && styles.inputDisabled]}
-              value={userData.numTel}
-              onChangeText={(text) => setUserData(prev => ({ ...prev, numTel: text }))}
-              editable={isEditing}
-              placeholder="663-123-4567"
-              keyboardType="phone-pad"
-            />
-          </View>
-
-          <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={[styles.input, styles.inputDisabled]}
-              value={userData.email}
-              editable={false}
-            />
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Información del sistema</Text>
-          <View style={styles.fieldRow}>
-            <View style={[styles.fieldContainer, styles.fieldHalf]}>
-              <Text style={styles.label}>Rol</Text>
-              <TextInput
-                style={[styles.input, styles.inputDisabled]}
-                value={userData.rol}
-                editable={false}
-              />
-            </View>
-
-            <View style={[styles.fieldContainer, styles.fieldHalf]}>
-              <Text style={styles.label}>Estado</Text>
-              <TextInput
-                style={[styles.input, styles.inputDisabled]}
-                value={userData.estado}
-                editable={false}
-              />
-            </View>
-          </View>
-
-          <View style={[styles.switchContainer, !isEditing && styles.switchDisabled]}>
-            <Text style={styles.label}>Modo oscuro</Text>
-            <Switch
-              value={userData.modoOscuro}
-              onValueChange={toggleSwitch}
-              disabled={!isEditing}
-            />
-          </View>
-        </View>
+    <View style={styles.fieldRow}>
+      <View style={[styles.fieldContainer, styles.fieldHalf]}>
+        <Text style={styles.label}>Nombre *</Text>
+        <TextInput
+          style={[styles.input, !isEditing && styles.inputDisabled]}
+          value={userData.primerNombre}
+          onChangeText={(text) => setUserData(p => ({ ...p, primerNombre: text }))}
+          editable={isEditing}
+          placeholder="Ingrese primer nombre"
+        />
       </View>
+
+      <View style={[styles.fieldContainer, styles.fieldHalf]}>
+        <Text style={styles.label}>Segundo Nombre</Text>
+        <TextInput
+          style={[styles.input, !isEditing && styles.inputDisabled]}
+          value={userData.segundoNombre}
+          onChangeText={(text) => setUserData(p => ({ ...p, segundoNombre: text }))}
+          editable={isEditing}
+          placeholder="Ingrese segundo nombre"
+        />
+      </View>
+    </View>
+
+    <View style={styles.fieldRow}>
+      <View style={[styles.fieldContainer, styles.fieldHalf]}>
+        <Text style={styles.label}>Primer Apellido *</Text>
+        <TextInput
+          style={[styles.input, !isEditing && styles.inputDisabled]}
+          value={userData.primerApellido}
+          onChangeText={(text) => setUserData(p => ({ ...p, primerApellido: text }))}
+          editable={isEditing}
+          placeholder="Ingrese primer apellido"
+        />
+      </View>
+
+      <View style={[styles.fieldContainer, styles.fieldHalf]}>
+        <Text style={styles.label}>Segundo Apellido</Text>
+        <TextInput
+          style={[styles.input, !isEditing && styles.inputDisabled]}
+          value={userData.segundoApellido}
+          onChangeText={(text) => setUserData(p => ({ ...p, segundoApellido: text }))}
+          editable={isEditing}
+          placeholder="Ingrese segundo apellido"
+        />
+      </View>
+    </View>
+
+    {/* Divider */}
+    <View style={styles.sectionDivider} />
+
+    {/* --- Datos de contacto --- */}
+    <Text style={styles.sectionTitle}>Datos de contacto</Text>
+
+    <View style={styles.fieldContainer}>
+      <Text style={styles.label}>Teléfono</Text>
+      <TextInput
+        style={[styles.input, !isEditing && styles.inputDisabled]}
+        value={userData.numTel}
+        onChangeText={(text) => setUserData(p => ({ ...p, numTel: text }))}
+        editable={isEditing}
+        placeholder="663-123-4567"
+        keyboardType="phone-pad"
+      />
+    </View>
+
+    <View style={styles.fieldContainer}>
+      <Text style={styles.label}>Email</Text>
+      <TextInput
+        style={[styles.input, styles.inputDisabled]}
+        value={userData.email}
+        editable={false}
+      />
+    </View>
+
+    {/* Divider */}
+    <View style={styles.sectionDivider} />
+
+    {/* --- Información del sistema --- */}
+    <Text style={styles.sectionTitle}>Información del sistema</Text>
+
+    <View style={styles.fieldRow}>
+      <View style={[styles.fieldContainer, styles.fieldHalf]}>
+        <Text style={styles.label}>Rol</Text>
+        <TextInput style={[styles.input, styles.inputDisabled]} value={userData.rol} editable={false} />
+      </View>
+
+      <View style={[styles.fieldContainer, styles.fieldHalf]}>
+        <Text style={styles.label}>Estado</Text>
+        <TextInput style={[styles.input, styles.inputDisabled]} value={userData.estado} editable={false} />
+      </View>
+    </View>
+  </View>
+</View>
+
+
+          
 
       {/* Botones de acción */}
       {isEditing && (
@@ -413,7 +429,7 @@ export default function PerfilShared({ navigation }) {
         </TouchableOpacity>
       )}
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.logoutButton}
         onPress={logout}
       >
@@ -429,13 +445,16 @@ export default function PerfilShared({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#f1f3f6",
+  },
+  contentContainer: {
+    paddingBottom: 48,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#f1f3f6",
   },
   loadingText: {
     marginTop: 10,
@@ -451,26 +470,70 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     backgroundColor: "#fff",
   },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#333",
+    color: "#1f2937",
   },
   editButton: {
-    padding: 8,
-  },
-  photoContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#dbeafe",
+    backgroundColor: "#f4f7ff",
     alignItems: "center",
-    marginVertical: 30,
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  editButtonActive: {
+    backgroundColor: "#e0ecff",
+    borderColor: "#bcd4ff",
+  },
+  darkModeToggle: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  darkModeToggleActive: {
+    backgroundColor: "#1f2937",
+    borderColor: "#1f2937",
+  },
+  darkModeToggleDisabled: {
+    opacity: 0.45,
+  },
+  photoSection: {
+    paddingHorizontal: 16,
+    marginTop: 14,
+    marginBottom: 2,
+  },
+  photoCard: {
+    backgroundColor: "#e9ecef",
+    borderRadius: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#d0d5db",
   },
   photoWrapper: {
     position: "relative",
+    marginBottom: 0,
   },
   profilePhoto: {
-    width: 120,
-    height: 120,
+    width: 130,
+    height: 130,
     borderRadius: 60,
-    backgroundColor: "#e0e0e0",
+    backgroundColor: "#d1d5db",
   },
   photoPlaceholder: {
     justifyContent: "center",
@@ -490,11 +553,16 @@ const styles = StyleSheet.create({
   changePhotoButton: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 15,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 20,
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+    elevation: 2,
   },
   changePhotoText: {
     marginLeft: 8,
@@ -503,22 +571,30 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   form: {
+    paddingHorizontal: 16,
+    marginTop: 16,
+  },
+  card: {
     backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 4,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 2,
   },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 16,
+  cardTitle: {
+    fontSize: 18,
     fontWeight: "700",
-    color: "#333",
-    marginBottom: 16,
+    color: "#1f2937",
+    marginBottom: 20,
   },
   fieldContainer: {
-    marginBottom: 20,
+    marginBottom: 18,
   },
   fieldRow: {
     flexDirection: "row",
@@ -526,47 +602,80 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   fieldHalf: {
-    flexBasis: "48%",
-  
+    width: "48%",
   },
-  fieldContainer: {
-    marginBottom: 20,
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  labelIcon: {
+    marginRight: 8,
   },
   label: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#6b7280",
+  },
+  modeSummary: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#f1f3f6",
+  },
+  modeIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    backgroundColor: "#f9fafb",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  modeIconWrapActive: {
+    backgroundColor: "#1f2937",
+    borderColor: "#1f2937",
+  },
+  modeSummaryTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#333",
-    marginBottom: 8,
+    color: "#1f2937",
+  },
+  modeSummarySubtitle: {
+    marginTop: 2,
+    fontSize: 12,
+    color: "#6b7280",
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: "#fff",
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: "#111827",
+    backgroundColor: "#f9fafb",
   },
   inputDisabled: {
-    backgroundColor: "#f9f9f9",
-    color: "#666",
-  },
-  switchContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-    paddingVertical: 10,
-  },
-   switchDisabled: {
-    opacity: 0.7,
+    backgroundColor: "#f3f4f6",
+    color: "#6b7280",
   },
   saveButton: {
     backgroundColor: "#007AFF",
-    marginHorizontal: 20,
+    marginHorizontal: 16,
     marginTop: 20,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 3,
   },
   saveButtonDisabled: {
     opacity: 0.6,
@@ -578,13 +687,18 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     backgroundColor: "#d9534f",
-    marginHorizontal: 20,
+    marginHorizontal: 16,
     marginTop: 20,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+    elevation: 3,
   },
   logoutIcon: {
     marginRight: 8,
@@ -594,4 +708,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  cardCombined: {
+  backgroundColor: "#fff",
+  borderRadius: 20,
+  padding: 20,
+  borderWidth: 1,
+  borderColor: "#e5e7eb",
+  shadowColor: "#000",
+  shadowOpacity: 0.05,
+  shadowOffset: { width: 0, height: 4 },
+  shadowRadius: 8,
+  elevation: 2,
+},
+
+sectionTitle: {
+  fontSize: 18,
+  fontWeight: "700",
+  color: "#1f2937",
+  marginBottom: 14,
+},
+
+sectionDivider: {
+  height: 1,
+  backgroundColor: "#eef2f7",
+  marginVertical: 10,      // compacta separación entre secciones
+  borderRadius: 1,
+},
+
 });
