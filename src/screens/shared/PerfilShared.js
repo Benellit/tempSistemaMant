@@ -23,7 +23,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 const db = getFirestore(appFirebase);
 
 export default function PerfilShared({ navigation }) {
-  const { logout, profile } = useAuth();
+  const { logout, profile, updateProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -223,8 +223,21 @@ export default function PerfilShared({ navigation }) {
     }
   };
 
-  const toggleSwitch = (value) => {
-    setUserData(prev => ({ ...prev, modoOscuro: value }));
+  const handleToggleDarkMode = async () => {
+    if (!profile) return;
+
+    const previousValue = userData.modoOscuro;
+    const nextValue = !previousValue;
+
+    setUserData(prev => ({ ...prev, modoOscuro: nextValue }));
+
+    try {
+      await updateProfile({ ...profile, modoOscuro: nextValue });
+    } catch (error) {
+      console.error("Error actualizando modo oscuro:", error);
+      Alert.alert("Error", "No se pudo actualizar el modo oscuro");
+      setUserData(prev => ({ ...prev, modoOscuro: previousValue }));
+    }
   };
 
   if (loading) {
@@ -258,14 +271,12 @@ export default function PerfilShared({ navigation }) {
           <TouchableOpacity
             style={[
               styles.darkModeToggle,
-              userData.modoOscuro && styles.darkModeToggleActive,
-              !isEditing && styles.darkModeToggleDisabled
+              userData.modoOscuro && styles.darkModeToggleActive
             ]}
-            onPress={() => {
-              if (!isEditing) return;
-              toggleSwitch(!userData.modoOscuro);
-            }}
-            activeOpacity={isEditing ? 0.8 : 1}
+            onPress={handleToggleDarkMode}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={userData.modoOscuro ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
           >
             <Ionicons
               name={userData.modoOscuro ? "moon" : "sunny"}
@@ -507,9 +518,6 @@ const styles = StyleSheet.create({
   darkModeToggleActive: {
     backgroundColor: "#1f2937",
     borderColor: "#1f2937",
-  },
-  darkModeToggleDisabled: {
-    opacity: 0.45,
   },
   photoSection: {
     paddingHorizontal: 16,
