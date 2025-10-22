@@ -290,91 +290,112 @@ export default function PerfilShared({ navigation }) {
 
       {/* Campos editables */}
       <View style={styles.form}>
-        <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Primer Nombre *</Text>
-          <TextInput
-            style={[styles.input, !isEditing && styles.inputDisabled]}
-            value={userData.primerNombre}
-            onChangeText={(text) => setUserData(prev => ({ ...prev, primerNombre: text }))}
-            editable={isEditing}
-            placeholder="Ingrese primer nombre"
-          />
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Datos personales</Text>
+          <View style={styles.fieldRow}>
+            <View style={[styles.fieldContainer, styles.fieldHalf]}>
+              <Text style={styles.label}>Primer Nombre *</Text>
+              <TextInput
+                style={[styles.input, !isEditing && styles.inputDisabled]}
+                value={userData.primerNombre}
+                onChangeText={(text) => setUserData(prev => ({ ...prev, primerNombre: text }))}
+                editable={isEditing}
+                placeholder="Ingrese primer nombre"
+              />
+            </View>
+
+            <View style={[styles.fieldContainer, styles.fieldHalf]}>
+              <Text style={styles.label}>Segundo Nombre</Text>
+              <TextInput
+                style={[styles.input, !isEditing && styles.inputDisabled]}
+                value={userData.segundoNombre}
+                onChangeText={(text) => setUserData(prev => ({ ...prev, segundoNombre: text }))}
+                editable={isEditing}
+                placeholder="Ingrese segundo nombre"
+              />
+            </View>
+          </View>
+
+          <View style={styles.fieldRow}>
+            <View style={[styles.fieldContainer, styles.fieldHalf]}>
+              <Text style={styles.label}>Primer Apellido *</Text>
+              <TextInput
+                style={[styles.input, !isEditing && styles.inputDisabled]}
+                value={userData.primerApellido}
+                onChangeText={(text) => setUserData(prev => ({ ...prev, primerApellido: text }))}
+                editable={isEditing}
+                placeholder="Ingrese primer apellido"
+              />
+            </View>
+
+            <View style={[styles.fieldContainer, styles.fieldHalf]}>
+              <Text style={styles.label}>Segundo Apellido</Text>
+              <TextInput
+                style={[styles.input, !isEditing && styles.inputDisabled]}
+                value={userData.segundoApellido}
+                onChangeText={(text) => setUserData(prev => ({ ...prev, segundoApellido: text }))}
+                editable={isEditing}
+                placeholder="Ingrese segundo apellido"
+              />
+            </View>
+          </View>
         </View>
 
-        <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Segundo Nombre</Text>
-          <TextInput
-            style={[styles.input, !isEditing && styles.inputDisabled]}
-            value={userData.segundoNombre}
-            onChangeText={(text) => setUserData(prev => ({ ...prev, segundoNombre: text }))}
-            editable={isEditing}
-            placeholder="Ingrese segundo nombre"
-          />
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Datos de contacto</Text>
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Teléfono</Text>
+            <TextInput
+              style={[styles.input, !isEditing && styles.inputDisabled]}
+              value={userData.numTel}
+              onChangeText={(text) => setUserData(prev => ({ ...prev, numTel: text }))}
+              editable={isEditing}
+              placeholder="663-123-4567"
+              keyboardType="phone-pad"
+            />
+          </View>
+
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={[styles.input, styles.inputDisabled]}
+              value={userData.email}
+              editable={false}
+            />
+          </View>
         </View>
 
-        <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Primer Apellido *</Text>
-          <TextInput
-            style={[styles.input, !isEditing && styles.inputDisabled]}
-            value={userData.primerApellido}
-            onChangeText={(text) => setUserData(prev => ({ ...prev, primerApellido: text }))}
-            editable={isEditing}
-            placeholder="Ingrese primer apellido"
-          />
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Información del sistema</Text>
+          <View style={styles.fieldRow}>
+            <View style={[styles.fieldContainer, styles.fieldHalf]}>
+              <Text style={styles.label}>Rol</Text>
+              <TextInput
+                style={[styles.input, styles.inputDisabled]}
+                value={userData.rol}
+                editable={false}
+              />
+            </View>
+
+            <View style={[styles.fieldContainer, styles.fieldHalf]}>
+              <Text style={styles.label}>Estado</Text>
+              <TextInput
+                style={[styles.input, styles.inputDisabled]}
+                value={userData.estado}
+                editable={false}
+              />
+            </View>
+          </View>
+
+          <View style={[styles.switchContainer, !isEditing && styles.switchDisabled]}>
+            <Text style={styles.label}>Modo oscuro</Text>
+            <Switch
+              value={userData.modoOscuro}
+              onValueChange={toggleSwitch}
+              disabled={!isEditing}
+            />
+          </View>
         </View>
-
-        <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Segundo Apellido</Text>
-          <TextInput
-            style={[styles.input, !isEditing && styles.inputDisabled]}
-            value={userData.segundoApellido}
-            onChangeText={(text) => setUserData(prev => ({ ...prev, segundoApellido: text }))}
-            editable={isEditing}
-            placeholder="Ingrese segundo apellido"
-          />
-        </View>
-
-        <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Teléfono</Text>
-          <TextInput
-            style={[styles.input, !isEditing && styles.inputDisabled]}
-            value={userData.numTel}
-            onChangeText={(text) => setUserData(prev => ({ ...prev, numTel: text }))}
-            editable={isEditing}
-            placeholder="663-123-4567"
-            keyboardType="phone-pad"
-          />
-        </View>
-
-        {/* Campos no editables */}
-        <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={[styles.input, styles.inputDisabled]}
-            value={userData.email}
-            editable={false}
-          />
-        </View>
-
-        <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Rol</Text>
-          <TextInput
-            style={[styles.input, styles.inputDisabled]}
-            value={userData.rol}
-            editable={false}
-          />
-        </View>
-
-        <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Estado</Text>
-          <TextInput
-            style={[styles.input, styles.inputDisabled]}
-            value={userData.estado}
-            editable={false}
-          />
-        </View>
-
-
       </View>
 
       {/* Botones de acción */}
@@ -396,6 +417,7 @@ export default function PerfilShared({ navigation }) {
         style={styles.logoutButton}
         onPress={logout}
       >
+        <Ionicons name="log-out-outline" size={20} color="#fff" style={styles.logoutIcon} />
         <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
       </TouchableOpacity>
 
@@ -484,6 +506,28 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingHorizontal: 20,
     paddingTop: 20,
+    paddingBottom: 4,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 16,
+  },
+  fieldContainer: {
+    marginBottom: 20,
+  },
+  fieldRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+  },
+  fieldHalf: {
+    flexBasis: "48%",
+  
   },
   fieldContainer: {
     marginBottom: 20,
@@ -513,6 +557,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingVertical: 10,
   },
+   switchDisabled: {
+    opacity: 0.7,
+  },
   saveButton: {
     backgroundColor: "#007AFF",
     marginHorizontal: 20,
@@ -535,7 +582,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
     padding: 16,
     borderRadius: 8,
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
+  },
+  logoutIcon: {
+    marginRight: 8,
   },
   logoutButtonText: {
     color: "#fff",
