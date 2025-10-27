@@ -1,26 +1,80 @@
-import { useEffect, useState } from "react";
-import { 
-  ActivityIndicator, 
-  Alert, 
-  Image, 
-  ScrollView, 
-  StyleSheet, 
-  Switch, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  View 
+import { useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  StatusBar,
 } from "react-native";
 import { useAuth } from "../login/AuthContext";
 import { doc, updateDoc, getFirestore } from "firebase/firestore";
 import appFirebase from "../../credenciales/Credenciales";
 import { cloudinaryConfig } from "../../credenciales/Credenciales";
-import * as ImagePicker from 'expo-image-picker';
-import Feather from '@expo/vector-icons/Feather';
-import AntDesign from '@expo/vector-icons/AntDesign';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import * as ImagePicker from "expo-image-picker";
+import Feather from "@expo/vector-icons/Feather";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 const db = getFirestore(appFirebase);
+
+// ========= TEMAS =========
+const themeLight = {
+  name: "light",
+  bg: "#f1f3f6",
+  card: "#ffffff",
+  cardAlt: "#e9ecef",
+  border: "#e5e7eb",
+  borderSubtle: "#d0d5db",
+  text: "#1f2937",
+  textMuted: "#6b7280",
+  inputBg: "#f9fafb",
+  inputDisabledBg: "#f3f4f6",
+  inputText: "#111827",
+  placeholder: "#9ca3af",
+  primary: "#007AFF",
+  danger: "#d9534f",
+  shadow: 0.08,
+  divider: "#eef2f7",
+  chipBg: "#f4f7ff",
+  chipBorder: "#dbeafe",
+  chipActiveBg: "#e0ecff",
+  chipActiveBorder: "#bcd4ff",
+  toggleBg: "#fff",
+  toggleBorder: "#e5e7eb",
+  toggleIcon: "#1f2937",
+};
+
+const themeDark = {
+  name: "dark",
+  bg: "#0b1220",
+  card: "#101826",
+  cardAlt: "#0f172a",
+  border: "rgba(88, 79, 79, 0.51)",        // borde tenue blanco
+  borderSubtle: "rgba(255,255,255,0.07)", // aún más suave
+  text: "#e5e7eb",
+  textMuted: "#9aa7b8",
+  inputBg: "#0f172a",
+  inputDisabledBg: "#0c1422",
+  inputText: "#e5e7eb",
+  placeholder: "#7b8796",
+  primary: "#4ea8ff",
+  danger: "#ef4444",
+  shadow: 0.25,
+  divider: "rgba(255,255,255,0.1)",       // separadores más visibles
+  chipBg: "#111a2a",
+  chipBorder: "rgba(255,255,255,0.1)",
+  chipActiveBg: "rgba(255,255,255,0.08)",
+  chipActiveBorder: "rgba(255,255,255,0.2)",
+  toggleBg: "#1f2937",
+  toggleBorder: "#1f2937",
+  toggleIcon: "#ffffff",
+};
+
 
 export default function PerfilShared({ navigation }) {
   const { logout, profile, updateProfile } = useAuth();
@@ -28,7 +82,7 @@ export default function PerfilShared({ navigation }) {
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  
+
   // Estados para los campos del perfil
   const [userData, setUserData] = useState({
     primerNombre: "",
@@ -42,7 +96,7 @@ export default function PerfilShared({ navigation }) {
     estado: "",
     modoOscuro: false,
     IDSucursal: null,
-    fechaRegistro: null
+    fechaRegistro: null,
   });
 
   // Cargar datos del usuario desde el profile del contexto
@@ -60,59 +114,65 @@ export default function PerfilShared({ navigation }) {
         estado: profile.estado || "",
         modoOscuro: profile.modoOscuro || false,
         IDSucursal: profile.IDSucursal || null,
-        fechaRegistro: profile.fechaRegistro || null
+        fechaRegistro: profile.fechaRegistro || null,
       });
       setLoading(false);
     }
   }, [profile]);
 
-  // Función para subir imagen a Cloudinary
+  // Tema actual (se recalcula cuando cambia modoOscuro)
+  const theme = useMemo(
+  () => (userData.modoOscuro ? themeLight : themeDark),
+  [userData.modoOscuro]
+  );
+
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
+  // Subir imagen a Cloudinary
   const uploadImageToCloudinary = async (uri) => {
     try {
       const formData = new FormData();
-      
-      // Crear el objeto de archivo para React Native
+
       const file = {
         uri,
-        type: 'image/jpeg',
+        type: "image/jpeg",
         name: `profile_${Date.now()}.jpg`,
       };
 
-      formData.append('file', file);
-      formData.append('upload_preset', cloudinaryConfig.uploadPreset);
-      formData.append('cloud_name', cloudinaryConfig.cloudName);
+      formData.append("file", file);
+      formData.append("upload_preset", cloudinaryConfig.uploadPreset);
+      formData.append("cloud_name", cloudinaryConfig.cloudName);
 
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloudName}/image/upload`,
         {
-          method: 'POST',
+          method: "POST",
           body: formData,
-          headers: {
-            'Accept': 'application/json',
-          },
+          headers: { Accept: "application/json" },
         }
       );
 
       const data = await response.json();
-      
-      if (data.secure_url) {
-        return data.secure_url;
-      } else {
-        throw new Error('No se recibió URL de la imagen');
-      }
+
+      if (data.secure_url) return data.secure_url;
+      throw new Error("No se recibió URL de la imagen");
     } catch (error) {
-      console.error('Error subiendo a Cloudinary:', error);
+      console.error("Error subiendo a Cloudinary:", error);
       throw error;
     }
   };
 
-  // Función para seleccionar imagen de la galería
+  // Galería
   const pickImageFromGallery = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (status !== 'granted') {
-        Alert.alert('Permiso denegado', 'Se necesita permiso para acceder a la galería');
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(
+          "Permiso denegado",
+          "Se necesita permiso para acceder a la galería"
+        );
         return;
       }
 
@@ -125,25 +185,30 @@ export default function PerfilShared({ navigation }) {
 
       if (!result.canceled && result.assets[0]) {
         setUploadingImage(true);
-        const imageUrl = await uploadImageToCloudinary(result.assets[0].uri);
-        setUserData(prev => ({ ...prev, fotoPerfil: imageUrl }));
-        Alert.alert('Éxito', 'Imagen cargada correctamente');
+        const imageUrl = await uploadImageToCloudinary(
+          result.assets[0].uri
+        );
+        setUserData((prev) => ({ ...prev, fotoPerfil: imageUrl }));
+        Alert.alert("Éxito", "Imagen cargada correctamente");
       }
     } catch (error) {
-      console.error('Error seleccionando imagen:', error);
-      Alert.alert('Error', 'No se pudo cargar la imagen');
+      console.error("Error seleccionando imagen:", error);
+      Alert.alert("Error", "No se pudo cargar la imagen");
     } finally {
       setUploadingImage(false);
     }
   };
 
-  // Función para tomar foto con la cámara
+  // Cámara
   const takePhotoWithCamera = async () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      
-      if (status !== 'granted') {
-        Alert.alert('Permiso denegado', 'Se necesita permiso para acceder a la cámara');
+
+      if (status !== "granted") {
+        Alert.alert(
+          "Permiso denegado",
+          "Se necesita permiso para acceder a la cámara"
+        );
         return;
       }
 
@@ -155,46 +220,33 @@ export default function PerfilShared({ navigation }) {
 
       if (!result.canceled && result.assets[0]) {
         setUploadingImage(true);
-        const imageUrl = await uploadImageToCloudinary(result.assets[0].uri);
-        setUserData(prev => ({ ...prev, fotoPerfil: imageUrl }));
-        Alert.alert('Éxito', 'Foto tomada correctamente');
+        const imageUrl = await uploadImageToCloudinary(
+          result.assets[0].uri
+        );
+        setUserData((prev) => ({ ...prev, fotoPerfil: imageUrl }));
+        Alert.alert("Éxito", "Foto tomada correctamente");
       }
     } catch (error) {
-      console.error('Error tomando foto:', error);
-      Alert.alert('Error', 'No se pudo tomar la foto');
+      console.error("Error tomando foto:", error);
+      Alert.alert("Error", "No se pudo tomar la foto");
     } finally {
       setUploadingImage(false);
     }
   };
 
-  // Mostrar opciones para cambiar foto
+  // Cambiar foto
   const handleChangePhoto = () => {
-    Alert.alert(
-      'Cambiar foto de perfil',
-      'Selecciona una opción',
-      [
-        {
-          text: 'Tomar foto',
-          onPress: takePhotoWithCamera,
-        },
-        {
-          text: 'Elegir de galería',
-          onPress: pickImageFromGallery,
-        },
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-      ],
-      { cancelable: true }
-    );
+    Alert.alert("Cambiar foto de perfil", "Selecciona una opción", [
+      { text: "Tomar foto", onPress: takePhotoWithCamera },
+      { text: "Elegir de galería", onPress: pickImageFromGallery },
+      { text: "Cancelar", style: "cancel" },
+    ]);
   };
 
-  // Guardar cambios en Firestore
+  // Guardar cambios
   const handleSave = async () => {
     if (!profile?.id) return;
 
-    // Validación básica
     if (!userData.primerNombre.trim() || !userData.primerApellido.trim()) {
       Alert.alert("Error", "El nombre y apellido son obligatorios");
       return;
@@ -210,7 +262,7 @@ export default function PerfilShared({ navigation }) {
         segundoApellido: userData.segundoApellido.trim(),
         numTel: userData.numTel.trim(),
         fotoPerfil: userData.fotoPerfil.trim(),
-        modoOscuro: userData.modoOscuro
+        modoOscuro: userData.modoOscuro,
       });
 
       Alert.alert("Éxito", "Perfil actualizado correctamente");
@@ -225,25 +277,26 @@ export default function PerfilShared({ navigation }) {
 
   const handleToggleDarkMode = async () => {
     if (!profile) return;
-
-    const previousValue = userData.modoOscuro;
-    const nextValue = !previousValue;
-
-    setUserData(prev => ({ ...prev, modoOscuro: nextValue }));
-
+    const prev = userData.modoOscuro;
+    const next = !prev;
+    setUserData((p) => ({ ...p, modoOscuro: next }));
     try {
-      await updateProfile({ ...profile, modoOscuro: nextValue });
+      await updateProfile({ ...profile, modoOscuro: next });
     } catch (error) {
       console.error("Error actualizando modo oscuro:", error);
       Alert.alert("Error", "No se pudo actualizar el modo oscuro");
-      setUserData(prev => ({ ...prev, modoOscuro: previousValue }));
+      setUserData((p) => ({ ...p, modoOscuro: prev }));
     }
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+      <View style={[styles.loadingContainer]}>
+        <StatusBar
+          barStyle={theme.name === "dark" ? "light-content" : "dark-content"}
+          backgroundColor={theme.bg}
+        />
+        <ActivityIndicator size="large" color={theme.primary} />
         <Text style={styles.loadingText}>Cargando perfil...</Text>
       </View>
     );
@@ -252,37 +305,60 @@ export default function PerfilShared({ navigation }) {
   if (!profile) {
     return (
       <View style={styles.container}>
-        <Text>No hay sesión activa</Text>
+        <StatusBar
+          barStyle={theme.name === "dark" ? "light-content" : "dark-content"}
+          backgroundColor={theme.bg}
+        />
+        <Text style={{ color: theme.text }}>No hay sesión activa</Text>
       </View>
     );
   }
 
- return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+  return (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+    >
+      <StatusBar
+        barStyle={theme.name === "dark" ? "light-content" : "dark-content"}
+        backgroundColor={theme.card}
+      />
+
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Mi Perfil</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity
             onPress={() => setIsEditing(!isEditing)}
-            style={[styles.editButton, isEditing && styles.editButtonActive]}
+            style={[
+              styles.editButton,
+              isEditing && styles.editButtonActive,
+            ]}
           >
-            <Feather name={isEditing ? "x" : "edit-2"} size={18} color="#007AFF" />
+            <Feather
+              name={isEditing ? "x" : "edit-2"}
+              size={18}
+              color={theme.primary}
+            />
           </TouchableOpacity>
+
           <TouchableOpacity
             style={[
               styles.darkModeToggle,
-              userData.modoOscuro && styles.darkModeToggleActive
+              userData.modoOscuro && styles.darkModeToggleActive,
             ]}
             onPress={handleToggleDarkMode}
             activeOpacity={0.8}
             accessibilityRole="button"
-            accessibilityLabel={userData.modoOscuro ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+            accessibilityLabel={
+              userData.modoOscuro ? "Cambiar a modo oscuro" : "Cambiar a modo claro"
+            }
           >
             <Ionicons
-              name={userData.modoOscuro ? "moon" : "sunny"}
-              size={18}
-              color={userData.modoOscuro ? "#fff" : "#1f2937"}
-            />
+            name={userData.modoOscuro ? "sunny" : "moon"}
+            size={18}
+            color={theme.toggleIcon}
+          />
           </TouchableOpacity>
         </View>
       </View>
@@ -298,7 +374,7 @@ export default function PerfilShared({ navigation }) {
               />
             ) : (
               <View style={[styles.profilePhoto, styles.photoPlaceholder]}>
-                <AntDesign name="user" size={60} color="#999" />
+                <AntDesign name="user" size={60} color={theme.placeholder} />
               </View>
             )}
 
@@ -314,120 +390,153 @@ export default function PerfilShared({ navigation }) {
               style={styles.changePhotoButton}
               onPress={handleChangePhoto}
             >
-              <Ionicons name="camera" size={20} color="#007AFF" />
+              <Ionicons name="camera" size={20} color={theme.primary} />
               <Text style={styles.changePhotoText}>Cambiar foto</Text>
             </TouchableOpacity>
           )}
         </View>
       </View>
 
-      {/* Campos editables */}
+      {/* Formulario */}
       <View style={styles.form}>
-  <View style={styles.cardCombined}>
-    {/* --- Datos personales --- */}
-    <Text style={styles.sectionTitle}>Datos personales</Text>
+        <View style={styles.cardCombined}>
+          <Text style={styles.sectionTitle}>Datos personales</Text>
 
-    <View style={styles.fieldRow}>
-      <View style={[styles.fieldContainer, styles.fieldHalf]}>
-        <Text style={styles.label}>Nombre *</Text>
-        <TextInput
-          style={[styles.input, !isEditing && styles.inputDisabled]}
-          value={userData.primerNombre}
-          onChangeText={(text) => setUserData(p => ({ ...p, primerNombre: text }))}
-          editable={isEditing}
-          placeholder="Ingrese primer nombre"
-        />
+          <View style={styles.fieldRow}>
+            <View style={[styles.fieldContainer, styles.fieldHalf]}>
+              <Text style={styles.label}>Nombre *</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  !isEditing && styles.inputDisabled,
+                ]}
+                value={userData.primerNombre}
+                onChangeText={(text) =>
+                  setUserData((p) => ({ ...p, primerNombre: text }))
+                }
+                editable={isEditing}
+                placeholder="Ingrese primer nombre"
+                placeholderTextColor={theme.placeholder}
+              />
+            </View>
+
+            <View style={[styles.fieldContainer, styles.fieldHalf]}>
+              <Text style={styles.label}>Segundo Nombre</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  !isEditing && styles.inputDisabled,
+                ]}
+                value={userData.segundoNombre}
+                onChangeText={(text) =>
+                  setUserData((p) => ({ ...p, segundoNombre: text }))
+                }
+                editable={isEditing}
+                placeholder="Ingrese segundo nombre"
+                placeholderTextColor={theme.placeholder}
+              />
+            </View>
+          </View>
+
+          <View style={styles.fieldRow}>
+            <View style={[styles.fieldContainer, styles.fieldHalf]}>
+              <Text style={styles.label}>Primer Apellido *</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  !isEditing && styles.inputDisabled,
+                ]}
+                value={userData.primerApellido}
+                onChangeText={(text) =>
+                  setUserData((p) => ({ ...p, primerApellido: text }))
+                }
+                editable={isEditing}
+                placeholder="Ingrese primer apellido"
+                placeholderTextColor={theme.placeholder}
+              />
+            </View>
+
+            <View style={[styles.fieldContainer, styles.fieldHalf]}>
+              <Text style={styles.label}>Segundo Apellido</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  !isEditing && styles.inputDisabled,
+                ]}
+                value={userData.segundoApellido}
+                onChangeText={(text) =>
+                  setUserData((p) => ({ ...p, segundoApellido: text }))
+                }
+                editable={isEditing}
+                placeholder="Ingrese segundo apellido"
+                placeholderTextColor={theme.placeholder}
+              />
+            </View>
+          </View>
+
+          <View style={styles.sectionDivider} />
+
+          <Text style={styles.sectionTitle}>Datos de contacto</Text>
+
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Teléfono</Text>
+            <TextInput
+              style={[
+                styles.input,
+                !isEditing && styles.inputDisabled,
+              ]}
+              value={userData.numTel}
+              onChangeText={(text) =>
+                setUserData((p) => ({ ...p, numTel: text }))
+              }
+              editable={isEditing}
+              placeholder="663-123-4567"
+              keyboardType="phone-pad"
+              placeholderTextColor={theme.placeholder}
+            />
+          </View>
+
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={[styles.input, styles.inputDisabled]}
+              value={userData.email}
+              editable={false}
+              placeholderTextColor={theme.placeholder}
+            />
+          </View>
+
+          <View style={styles.sectionDivider} />
+
+          <Text style={styles.sectionTitle}>Información del sistema</Text>
+
+          <View style={styles.fieldRow}>
+            <View style={[styles.fieldContainer, styles.fieldHalf]}>
+              <Text style={styles.label}>Rol</Text>
+              <TextInput
+                style={[styles.input, styles.inputDisabled]}
+                value={userData.rol}
+                editable={false}
+                placeholderTextColor={theme.placeholder}
+              />
+            </View>
+
+            <View style={[styles.fieldContainer, styles.fieldHalf]}>
+              <Text style={styles.label}>Estado</Text>
+              <TextInput
+                style={[styles.input, styles.inputDisabled]}
+                value={userData.estado}
+                editable={false}
+                placeholderTextColor={theme.placeholder}
+              />
+            </View>
+          </View>
+        </View>
       </View>
 
-      <View style={[styles.fieldContainer, styles.fieldHalf]}>
-        <Text style={styles.label}>Segundo Nombre</Text>
-        <TextInput
-          style={[styles.input, !isEditing && styles.inputDisabled]}
-          value={userData.segundoNombre}
-          onChangeText={(text) => setUserData(p => ({ ...p, segundoNombre: text }))}
-          editable={isEditing}
-          placeholder="Ingrese segundo nombre"
-        />
-      </View>
-    </View>
-
-    <View style={styles.fieldRow}>
-      <View style={[styles.fieldContainer, styles.fieldHalf]}>
-        <Text style={styles.label}>Primer Apellido *</Text>
-        <TextInput
-          style={[styles.input, !isEditing && styles.inputDisabled]}
-          value={userData.primerApellido}
-          onChangeText={(text) => setUserData(p => ({ ...p, primerApellido: text }))}
-          editable={isEditing}
-          placeholder="Ingrese primer apellido"
-        />
-      </View>
-
-      <View style={[styles.fieldContainer, styles.fieldHalf]}>
-        <Text style={styles.label}>Segundo Apellido</Text>
-        <TextInput
-          style={[styles.input, !isEditing && styles.inputDisabled]}
-          value={userData.segundoApellido}
-          onChangeText={(text) => setUserData(p => ({ ...p, segundoApellido: text }))}
-          editable={isEditing}
-          placeholder="Ingrese segundo apellido"
-        />
-      </View>
-    </View>
-
-    {/* Divider */}
-    <View style={styles.sectionDivider} />
-
-    {/* --- Datos de contacto --- */}
-    <Text style={styles.sectionTitle}>Datos de contacto</Text>
-
-    <View style={styles.fieldContainer}>
-      <Text style={styles.label}>Teléfono</Text>
-      <TextInput
-        style={[styles.input, !isEditing && styles.inputDisabled]}
-        value={userData.numTel}
-        onChangeText={(text) => setUserData(p => ({ ...p, numTel: text }))}
-        editable={isEditing}
-        placeholder="663-123-4567"
-        keyboardType="phone-pad"
-      />
-    </View>
-
-    <View style={styles.fieldContainer}>
-      <Text style={styles.label}>Email</Text>
-      <TextInput
-        style={[styles.input, styles.inputDisabled]}
-        value={userData.email}
-        editable={false}
-      />
-    </View>
-
-    {/* Divider */}
-    <View style={styles.sectionDivider} />
-
-    {/* --- Información del sistema --- */}
-    <Text style={styles.sectionTitle}>Información del sistema</Text>
-
-    <View style={styles.fieldRow}>
-      <View style={[styles.fieldContainer, styles.fieldHalf]}>
-        <Text style={styles.label}>Rol</Text>
-        <TextInput style={[styles.input, styles.inputDisabled]} value={userData.rol} editable={false} />
-      </View>
-
-      <View style={[styles.fieldContainer, styles.fieldHalf]}>
-        <Text style={styles.label}>Estado</Text>
-        <TextInput style={[styles.input, styles.inputDisabled]} value={userData.estado} editable={false} />
-      </View>
-    </View>
-  </View>
-</View>
-
-
-          
-
-      {/* Botones de acción */}
+      {/* Botones */}
       {isEditing && (
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.saveButton, saving && styles.saveButtonDisabled]}
           onPress={handleSave}
           disabled={saving}
@@ -440,11 +549,13 @@ export default function PerfilShared({ navigation }) {
         </TouchableOpacity>
       )}
 
-      <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={logout}
-      >
-        <Ionicons name="log-out-outline" size={20} color="#fff" style={styles.logoutIcon} />
+      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+        <Ionicons
+          name="log-out-outline"
+          size={20}
+          color="#fff"
+          style={styles.logoutIcon}
+        />
         <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
       </TouchableOpacity>
 
@@ -453,294 +564,243 @@ export default function PerfilShared({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f1f3f6",
-  },
-  contentContainer: {
-    paddingBottom: 48,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f1f3f6",
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "#666",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: "#fff",
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#1f2937",
-  },
-  editButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#dbeafe",
-    backgroundColor: "#f4f7ff",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  editButtonActive: {
-    backgroundColor: "#e0ecff",
-    borderColor: "#bcd4ff",
-  },
-  darkModeToggle: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  darkModeToggleActive: {
-    backgroundColor: "#1f2937",
-    borderColor: "#1f2937",
-  },
-  photoSection: {
-    paddingHorizontal: 16,
-    marginTop: 14,
-    marginBottom: 2,
-  },
-  photoCard: {
-    backgroundColor: "#e9ecef",
-    borderRadius: 24,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#d0d5db",
-  },
-  photoWrapper: {
-    position: "relative",
-    marginBottom: 0,
-  },
-  profilePhoto: {
-    width: 130,
-    height: 130,
-    borderRadius: 60,
-    backgroundColor: "#d1d5db",
-  },
-  photoPlaceholder: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  uploadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    borderRadius: 60,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  changePhotoButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    backgroundColor: "#fff",
-    borderRadius: 24,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  changePhotoText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: "#007AFF",
-    fontWeight: "600",
-  },
-  form: {
-    paddingHorizontal: 16,
-    marginTop: 16,
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1f2937",
-    marginBottom: 20,
-  },
-  fieldContainer: {
-    marginBottom: 18,
-  },
-  fieldRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-  },
-  fieldHalf: {
-    width: "48%",
-  },
-  labelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  labelIcon: {
-    marginRight: 8,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#6b7280",
-  },
-  modeSummary: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 8,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#f1f3f6",
-  },
-  modeIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#f9fafb",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  modeIconWrapActive: {
-    backgroundColor: "#1f2937",
-    borderColor: "#1f2937",
-  },
-  modeSummaryTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1f2937",
-  },
-  modeSummarySubtitle: {
-    marginTop: 2,
-    fontSize: 12,
-    color: "#6b7280",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: "#111827",
-    backgroundColor: "#f9fafb",
-  },
-  inputDisabled: {
-    backgroundColor: "#f3f4f6",
-    color: "#6b7280",
-  },
-  saveButton: {
-    backgroundColor: "#007AFF",
-    marginHorizontal: 16,
-    marginTop: 20,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  logoutButton: {
-    backgroundColor: "#d9534f",
-    marginHorizontal: 16,
-    marginTop: 20,
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  logoutIcon: {
-    marginRight: 8,
-  },
-  logoutButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  cardCombined: {
-  backgroundColor: "#fff",
-  borderRadius: 20,
-  padding: 20,
-  borderWidth: 1,
-  borderColor: "#e5e7eb",
-  shadowColor: "#000",
-  shadowOpacity: 0.05,
-  shadowOffset: { width: 0, height: 4 },
-  shadowRadius: 8,
-  elevation: 2,
+// ========= ESTILOS DINÁMICOS POR TEMA =========
+function createStyles(theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.bg,
+    },
+    contentContainer: {
+      paddingBottom: 48,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.bg,
+    },
+    loadingText: {
+      marginTop: 10,
+      fontSize: 16,
+      color: theme.textMuted,
+    },
+    header: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  paddingHorizontal: 20,
+  paddingTop: 60,
+  paddingBottom: 20,
+  backgroundColor: theme.card,
+  borderBottomWidth: 1,
+  borderBottomColor:
+    theme.name === "dark"
+      ? "rgba(255, 255, 255, 0.85)"  // borde blanco sutil para modo oscuro
+      : "rgba(0,0,0,0.08)",       // borde gris claro en modo claro
 },
 
-sectionTitle: {
-  fontSize: 18,
-  fontWeight: "700",
-  color: "#1f2937",
-  marginBottom: 14,
-},
-
-sectionDivider: {
-  height: 1,
-  backgroundColor: "#eef2f7",
-  marginVertical: 10,      // compacta separación entre secciones
-  borderRadius: 1,
-},
-
-});
+    headerActions: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: "700",
+      color: theme.text,
+    },
+    editButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.chipBorder,
+      backgroundColor: theme.chipBg,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 12,
+    },
+    editButtonActive: {
+      backgroundColor: theme.chipActiveBg,
+      borderColor: theme.chipActiveBorder,
+    },
+    darkModeToggle: {
+      width: 40,
+      height: 40,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.toggleBorder,
+      backgroundColor: theme.toggleBg,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    darkModeToggleActive: {
+      backgroundColor: theme.toggleBg,
+      borderColor: theme.toggleBorder,
+    },
+    photoSection: {
+      paddingHorizontal: 16,
+      marginTop: 14,
+      marginBottom: 2,
+    },
+    photoCard: {
+      backgroundColor: theme.cardAlt,
+      borderRadius: 24,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: theme.borderSubtle,
+    },
+    photoWrapper: {
+      position: "relative",
+      marginBottom: 0,
+    },
+    profilePhoto: {
+      width: 130,
+      height: 130,
+      borderRadius: 60,
+      backgroundColor: theme.inputDisabledBg,
+    },
+    photoPlaceholder: {
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    uploadingOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      borderRadius: 60,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    changePhotoButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 8,
+      paddingVertical: 10,
+      paddingHorizontal: 18,
+      backgroundColor: theme.card,
+      borderRadius: 24,
+      shadowColor: "#000",
+      shadowOpacity: theme.shadow,
+      shadowOffset: { width: 0, height: 3 },
+      shadowRadius: 6,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    changePhotoText: {
+      marginLeft: 8,
+      fontSize: 14,
+      color: theme.primary,
+      fontWeight: "600",
+    },
+    form: {
+      paddingHorizontal: 16,
+      marginTop: 16,
+    },
+    cardCombined: {
+      backgroundColor: theme.card,
+      borderRadius: 20,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: theme.border,
+      shadowColor: "#000",
+      shadowOpacity: theme.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: theme.text,
+      marginBottom: 14,
+    },
+    sectionDivider: {
+      height: 1,
+      backgroundColor: theme.divider,
+      marginVertical: 10,
+      borderRadius: 1,
+    },
+    fieldContainer: {
+      marginBottom: 18,
+    },
+    fieldRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      flexWrap: "wrap",
+    },
+    fieldHalf: {
+      width: "48%",
+    },
+    label: {
+      fontSize: 13,
+      fontWeight: "500",
+      color: theme.textMuted,
+      marginBottom: 6,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 15,
+      color: theme.inputText,
+      backgroundColor: theme.inputBg,
+    },
+    inputDisabled: {
+      backgroundColor: theme.inputDisabledBg,
+      color: theme.textMuted,
+    },
+    saveButton: {
+      backgroundColor: theme.primary,
+      marginHorizontal: 16,
+      marginTop: 20,
+      padding: 16,
+      borderRadius: 12,
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOpacity: theme.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    saveButtonDisabled: {
+      opacity: 0.6,
+    },
+    saveButtonText: {
+      color: "#fff",
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    logoutButton: {
+      backgroundColor: theme.danger,
+      marginHorizontal: 16,
+      marginTop: 20,
+      padding: 16,
+      borderRadius: 12,
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOpacity: theme.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 10,
+      elevation: 3,
+    },
+    logoutIcon: {
+      marginRight: 8,
+    },
+    logoutButtonText: {
+      color: "#fff",
+      fontSize: 16,
+      fontWeight: "600",
+    },
+  });
+}

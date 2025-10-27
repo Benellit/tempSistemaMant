@@ -372,15 +372,15 @@ export default function TareasShared({ navigation }) {
                                     </View>
 
                                     {/* 📸 Reportes y evidencias */}
-                                    <View style={{ flexDirection: 'row', gap: 10 }}>
-                                        <View style={{ flexDirection: "row", gap: 6 }}>
-                                            <Feather name="camera" size={18} color={profile.modoOscuro ? "#353335" : "#EDEDED"} />
+                                    <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
+                                        <View style={{ flexDirection: "row", gap: 3 }}>
+                                            <Feather name="camera" size={16} color={profile.modoOscuro ? "#353335" : "#EDEDED"} />
                                             <Text style={profile.modoOscuro ? styles.numerosClaro : styles.numerosOscuro}>
                                                 {tarea.totalEvidencias}
                                             </Text>
                                         </View>
-                                        <View style={{ flexDirection: "row", gap: 6 }}>
-                                            <AntDesign name="book" size={18} color={profile.modoOscuro ? "#353335" : "#EDEDED"} />
+                                        <View style={{ flexDirection: "row", gap: 3 }}>
+                                            <AntDesign name="book" size={16} color={profile.modoOscuro ? "#353335" : "#EDEDED"} />
                                             <Text style={profile.modoOscuro ? styles.numerosClaro : styles.numerosOscuro}>
                                                 {tarea.totalReportes}
                                             </Text>
@@ -468,9 +468,9 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     headerClaro: {
-        paddingTop: 15,
+        paddingTop: 16,
         paddingHorizontal: 15,
-        paddingBottom: 5,
+        paddingBottom: 8,
         backgroundColor: "white",
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
@@ -478,12 +478,13 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 16,
         borderBottomWidth: 1,
-        borderColor: "#D9D9D9"
+        borderColor: "#D9D9D9",
+        marginBottom: 6,
     },
     headerOscuro: {
-        paddingTop: 15,
+        paddingTop: 16,
         paddingHorizontal: 15,
-        paddingBottom: 10,
+        paddingBottom: 8,
         backgroundColor: "#2C2C2C",
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
@@ -491,19 +492,22 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 16,
         borderBottomWidth: 1,
-        borderColor: "#D9D9D9"
+        borderColor: "#D9D9D9",
+        marginBottom: 6,
     },
     tituloClaro: {
         color: "black",
         fontSize: 26,
         fontWeight: 900,
-        marginTop: 10,
+        marginTop: 16,
+        marginBottom: 4,
     },
     tituloOscuro: {
         color: "white",
         fontSize: 26,
         fontWeight: 900,
-        marginTop: 10,
+        marginTop: 16,
+        marginBottom: 4,
     },
     inputBusqueda: {
         paddingLeft: 15,
