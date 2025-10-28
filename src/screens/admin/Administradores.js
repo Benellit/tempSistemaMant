@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import BotonRegistrar from '../../components/BotonRegistrar';
 import appFirebase from '../../credenciales/Credenciales';
+import EvilIcons from '@expo/vector-icons/EvilIcons';
 import { useAuth } from "../login/AuthContext";
 
 const db = getFirestore(appFirebase);
@@ -66,31 +67,69 @@ const UsuariosGestor = ({ navigation }) => {
             style={{ flex: 1 }}
         >
             <View style={{ flex: 1 }}>
-                {/* Header */}
-                <View style={profile.modoOscuro === true ? styles.headerClaro : styles.headerOscuro}>
+                 {/* Header */}
+                <View style={profile.modoOscuro ? styles.headerOscuro : styles.headerClaro}>
                     <View>
-                        <Text style={profile.modoOscuro === true ? styles.tituloClaro : styles.tituloOscuro}>Usuarios</Text>
+                        <Text style={profile.modoOscuro ? styles.tituloOscuro : styles.tituloClaro}>
+                            Usuarios
+                        </Text>
                     </View>
-                    <View style={{ flexDirection: "row", gap: 10 }}>
-                        <View style={{ marginBottom: 0, marginTop: 5, flex: 1 }}>
+
+                    <View style={{ flexDirection: 'row', gap: 10, marginBottom: 5 }}>
+                        <View style={{ marginBottom: 0, marginVertical: 5, flex: 1 }}>
                             <TextInput
                                 placeholder="Buscar"
-                                placeholderTextColor={profile.modoOscuro === true ? "black" : "#FFFF"}
-                                style={styles.inputBusqueda}
+                                placeholderTextColor={profile.modoOscuro ? '#BDBDBD' : '#6B7280'}
+                                style={[
+                                    styles.inputBusqueda,
+                                    { color: profile.modoOscuro ? '#FFFFFF' : '#111827' },
+                                ]}
                                 value={busqueda}
                                 onChangeText={setBusqueda}
                             />
-                            <View style={{ position: "absolute", right: 15, top: 14 }}>
-                                <FontAwesome6 name="magnifying-glass" size={18} color={profile.modoOscuro === true ? "black" : "#FFFF"} />
-                            </View>
+
+                            {busqueda !== '' && (
+                                <TouchableOpacity
+                                    disabled={refreshing}
+                                    onPress={() => setBusqueda('')}
+                                    style={{
+                                        position: 'absolute',
+                                        top: 3,
+                                        right: 38,
+                                        padding: 4,
+                                        opacity: refreshing ? 0.5 : 1,
+                                    }}
+                                >
+                                    <EvilIcons name="close" size={24} color={profile.modoOscuro ? '#FFFFFF' : '#111827'} />
+                                </TouchableOpacity>
+                            )}
+
+                            <TouchableOpacity
+                                disabled={refreshing}
+                                onPress={onRefresh}
+                                style={{
+                                    position: 'absolute',
+                                    right: 0,
+                                    top: 0,
+                                    backgroundColor: '#87aef0',
+                                    padding: 10,
+                                    borderTopRightRadius: 20,
+                                    borderBottomRightRadius: 20,
+                                    opacity: refreshing ? 0.6 : 1,
+                                }}
+                            >
+                                <FontAwesome6 name="magnifying-glass" size={16} color={profile.modoOscuro ? '#FFFF' : 'black'} />
+                            </TouchableOpacity>
                         </View>
-                        <View style={{ marginTop: 5, justifyContent: "center", alignContent: "center" }}>
-                            <TouchableOpacity style={styles.opciones}>
-                                <Ionicons name="options-outline" size={22} color={profile.modoOscuro === true ? "black" : "#FFFF"} />
+
+                        <View style={{ marginTop: 5, justifyContent: 'center', alignContent: 'center' }}>
+                            <TouchableOpacity style={styles.opciones} onPress={() => { /* abrir filtros si aplica */ }}>
+                                <Ionicons name="options-outline" size={24} color={profile.modoOscuro ? '#FFFF' : 'black'} />
                             </TouchableOpacity>
                         </View>
                     </View>
                 </View>
+
 
                 <View style={styles.container}>
                     <ScrollView
@@ -112,9 +151,9 @@ const UsuariosGestor = ({ navigation }) => {
                             </View>
                         ) : (
                             usuariosFiltrados.map((usuario) => (
-                                <TouchableOpacity 
-                                    key={usuario.id} 
-                                    style={profile.modoOscuro === true ? styles.tarjetaClaro : styles.tarjetaOscuro}
+                                <TouchableOpacity
+                                    key={usuario.id}
+                                    style={profile.modoOscuro ? styles.tarjetaOscuro : styles.tarjetaClaro}
                                     onPress={() => verPerfilUsuario(usuario)}
                                 >
                                     <Image 
@@ -122,7 +161,7 @@ const UsuariosGestor = ({ navigation }) => {
                                         style={styles.fotoPerfil}
                                     />
                                     <View style={styles.infoUsuario}>
-                                        <Text style={profile.modoOscuro === true ? styles.nombreClaro : styles.nombreOscuro}>
+                                        <Text style={profile.modoOscuro ? styles.nombreOscuro : styles.nombreClaro}>
                                             {usuario.primerNombre} {usuario.segundoNombre} {usuario.primerApellido} {usuario.segundoApellido}
                                         </Text>
                                         <Text style={styles.email}>{usuario.email}</Text>
@@ -142,10 +181,10 @@ const UsuariosGestor = ({ navigation }) => {
                                         </View>
                                     </View>
                                     <View style={styles.iconoFlecha}>
-                                        <Ionicons 
-                                            name="chevron-forward" 
-                                            size={24} 
-                                            color={profile.modoOscuro === true ? "#666" : "#ccc"} 
+                                        <Ionicons
+                                            name="chevron-forward"
+                                            size={24}
+                                            color={profile.modoOscuro ? '#ccc' : '#666'} 
                                         />
                                     </View>
                                 </TouchableOpacity>
@@ -164,58 +203,63 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     headerClaro: {
-        paddingTop: 15,
+        paddingTop: 16,
         paddingHorizontal: 15,
-        paddingBottom: 10,
-        backgroundColor: "white",
-        shadowColor: "#000",
+        paddingBottom: 8,
+        backgroundColor: 'white',
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 5,
-        elevation: 6,
-        borderBottomWidth: 2,
-        borderColor: "#D9D9D9"
+        elevation: 16,
+        borderBottomWidth: 1,
+        borderColor: '#D9D9D9',
+        marginBottom: 6,
     },
     headerOscuro: {
-        paddingTop: 15,
+        paddingTop: 16,
         paddingHorizontal: 15,
-        paddingBottom: 10,
-        backgroundColor: "#2C2C2C",
-        shadowColor: "#000",
+        paddingBottom: 8,
+        backgroundColor: '#2C2C2C',
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 5,
-        elevation: 6,
-        borderBottomWidth: 2,
-        borderColor: "#D9D9D9"
+        elevation: 16,
+        borderBottomWidth: 1,
+        borderColor: '#3A3A3A',
+        marginBottom: 6,
     },
     tituloClaro: {
-        color: "black",
+        color: 'black',
         fontSize: 26,
-        fontWeight: "900",
-        marginTop: 10,
+        fontWeight: '900',
+        marginTop: 16,
+        marginBottom: 4,
     },
     tituloOscuro: {
-        color: "white",
+        color: 'white',
         fontSize: 26,
-        fontWeight: "900",
-        marginTop: 10,
+        fontWeight: '900',
+        marginTop: 16,
+        marginBottom: 4,
     },
     inputBusqueda: {
         paddingLeft: 15,
-        paddingRight: 45,
-        paddingVertical: 12,
         borderRadius: 20,
-        borderColor: "#D9D9D9",
-        borderWidth: 2,
+        borderColor: '#D9D9D9',
+        borderWidth: 1,
         fontSize: 16,
+        paddingBottom: 7,
+        paddingTop: 7,
+        backgroundColor: 'transparent',
     },
     opciones: {
-        padding: 10,
+        padding: 7,
         borderRadius: 9,
-        borderColor: "#D9D9D9",
-        borderWidth: 2,
-    },
+        backgroundColor: '#87aef0',
+},
+
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
