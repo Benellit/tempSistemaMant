@@ -259,16 +259,16 @@ export default function TareasShared({ navigation }) {
         >
             <View style={{ flex: 1 }}>
                 {/* Header */}
-                <View style={profile.modoOscuro === true ? styles.headerClaro : styles.headerOscuro}>
+                <View style={profile.modoOscuro ? styles.headerOscuro : styles.headerClaro}>
                     <View>
-                        <Text style={profile.modoOscuro === true ? styles.tituloClaro : styles.tituloOscuro}>Tareas</Text>
+                        <Text style={profile.modoOscuro ? styles.tituloOscuro : styles.tituloClaro}>Tareas</Text>
                     </View>
                     <View style={{ flexDirection: "row", gap: 10, marginBottom: 5 }}>
                         <View style={{ marginBottom: 0, marginVertical: 5, flex: 1 }}>
                             <TextInput
                                 placeholder="Buscar"
-                                placeholderTextColor={profile.modoOscuro === true ? "black" : "#FFFF"}
-                                style={styles.inputBusqueda}
+                                placeholderTextColor={profile.modoOscuro ? "#BDBDBD" : "#6B7280"}
+                                style={[styles.inputBusqueda, { color: profile.modoOscuro ? "#FFFFFF" : "#111827" }]}
                                 value={busqueda}
                                 onChangeText={setBusqueda}
                             />
