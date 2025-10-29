@@ -363,7 +363,42 @@ export default function PerfilUsuarioShared({ route, navigation }) {
           <Feather name="arrow-left" size={18} color={theme.primary} />
         </TouchableOpacity>
 
-        <Text style={styles.title}>Usuario</Text>
+        <View style={{ flex: 1, alignItems: "center" }}>
+  <Text
+    style={[
+      styles.subtitle,
+      { 
+        color: theme.textMuted,
+        fontSize: 14,
+        marginBottom: 0,
+        letterSpacing: 0.3,
+      },
+    ]}
+  >
+    Perfil de usuario
+  </Text>
+
+  <Text
+    style={[
+      styles.title,
+      {
+        color: theme.primary,
+        fontSize: 24,
+        fontWeight: "700",
+        textAlign: "center",
+        maxWidth: "80%", // evita que se salga
+      },
+    ]}
+    numberOfLines={1}
+    ellipsizeMode="tail"
+  >
+    {`${userData.primerNombre || ""} ${userData.primerApellido || ""}`.trim() ||
+      "Usuario"}
+  </Text>
+</View>
+
+
+
 
         {canEdit ? (
           <TouchableOpacity
@@ -706,13 +741,15 @@ function createStyles(theme) {
       justifyContent: "space-between",
       alignItems: "center",
       paddingHorizontal: 20,
-      paddingTop: 60,
+      paddingTop: 40,
       paddingBottom: 20,
       backgroundColor: theme.card,
       borderBottomWidth: 1,
       borderBottomColor:
-        theme.name === "dark" ? "rgba(255, 255, 255, 0.85)" : "rgba(0,0,0,0.08)",
-    },
+       theme.name === "dark"
+      ? "rgba(69,72,82,0.85)"   // <- antes tenías casi blanco
+      : "rgba(0,0,0,0.08)",
+},
     headerIconBtn: {
       width: 40,
       height: 40,
@@ -722,9 +759,10 @@ function createStyles(theme) {
       backgroundColor: theme.chipBg,
       alignItems: "center",
       justifyContent: "center",
+      marginTop: 10
     },
     headerSpacer: { width: 40, height: 40 }, // ocupa el lugar del botón de editar cuando no hay permisos
-    title: { fontSize: 28, fontWeight: "700", color: theme.text },
+    title: { fontSize: 26, fontWeight: "700", color: theme.text },
 
     editButton: {
       width: 40,
@@ -735,6 +773,7 @@ function createStyles(theme) {
       backgroundColor: theme.chipBg,
       alignItems: "center",
       justifyContent: "center",
+      marginTop: 10,
     },
     editButtonActive: {
       backgroundColor: theme.chipActiveBg,
@@ -821,16 +860,22 @@ function createStyles(theme) {
     inputDisabled: { backgroundColor: theme.inputDisabledBg, color: theme.textMuted },
 
     selectButton: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      borderWidth: 1,
-      borderColor: theme.border,
-      borderRadius: 12,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      backgroundColor: theme.inputBg,
-    },
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  borderWidth: 1,
+  borderColor: theme.border,
+  borderRadius: 12,
+  paddingHorizontal: 14,
+  paddingVertical: 12,
+  backgroundColor: theme.inputBg,     // <- igual que inputs
+  shadowColor: "#000",
+  shadowOpacity: theme.shadow,
+  shadowOffset: { width: 0, height: 2 },
+  shadowRadius: 4,
+  elevation: 2,
+},
+
     selectButtonText: { fontSize: 15, color: theme.inputText },
 
     infoText: {
