@@ -112,20 +112,34 @@ function AppStack() {
       <Stack.Screen
         name="RegistrarSucursales"
         component={RegistrarSucursalesAdmin}
-        options={{
-          headerTitle: "",
-          headerStyle: { backgroundColor: "#618ccfff", height: 80 },
-          headerTintColor: "#fff",
-        }}
+        options={({ route }) => ({
+        headerTitle: "",
+        headerStyle: {
+          backgroundColor: profile.modoOscuro ? "#101826" : "#FFFFFF", // card
+          height: 80,
+        },
+        headerTintColor: profile.modoOscuro ? "#E5E7EB" : "#1F2937",   // text
+        headerTitleStyle: {
+          color: profile.modoOscuro ? "#E5E7EB" : "#1F2937",
+        },
+        headerShadowVisible: true,
+      })}
       />
       <Stack.Screen
         name="RegistrarUsuarios"
         component={RegistrarUsuariosGestor}
-        options={{
-          headerTitle: "",
-          headerStyle: { backgroundColor: "#618ccfff", height: 80 },
-          headerTintColor: "#fff",
-        }}
+        options={({ route }) => ({
+        headerTitle: "",
+        headerStyle: {
+          backgroundColor: profile.modoOscuro ? "#101826" : "#FFFFFF", // card
+          height: 80,
+        },
+        headerTintColor: profile.modoOscuro ? "#E5E7EB" : "#1F2937",   // text
+        headerTitleStyle: {
+          color: profile.modoOscuro ? "#E5E7EB" : "#1F2937",
+        },
+        headerShadowVisible: true,
+      })}
       />
       <Stack.Screen
         name="TareaDetails"
@@ -169,12 +183,12 @@ function AdminScreens() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarStyle: {
-          backgroundColor: profile.modoOscuro === true ? "white" : "#2C2C2C",
-          borderTopWidth: 1,
-          borderColor: "#D9D9D9",
-          elevation: 20,
-          shadowOpacity: 20,
-        },
+        backgroundColor: profile.modoOscuro ? "#171A1E" : "#FFFFFF",
+        borderTopWidth: 1,
+        borderColor: profile.modoOscuro ? "rgba(255,255,255,0.10)" : "#E5E7EB",
+        elevation: 20,
+        shadowOpacity: 20,
+      },
         headerShown: false,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
@@ -201,8 +215,8 @@ function AdminScreens() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: profile.modoOscuro === true ? "gray" : "#D9D9D9",
+        tabBarActiveTintColor: '#4C7BFF',
+        tabBarInactiveTintColor: profile.modoOscuro ? "#A1A6AD" : "#6B7280",
       })}
     >
       <Tab.Screen name="Home" component={HomeAdmin} />
@@ -220,12 +234,12 @@ function GestorScreens() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarStyle: {
-          backgroundColor: profile.modoOscuro === true ? "white" : "#2C2C2C",
-          borderTopWidth: 1,
-          borderColor: "#D9D9D9",
-          elevation: 20,
-          shadowOpacity: 20,
-        },
+        backgroundColor: profile.modoOscuro ? "#171A1E" : "#FFFFFF",
+        borderTopWidth: 1,
+        borderColor: profile.modoOscuro ? "rgba(255,255,255,0.10)" : "#E5E7EB",
+        elevation: 20,
+        shadowOpacity: 20,
+      },
         headerShown: false,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
@@ -242,8 +256,8 @@ function GestorScreens() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: profile.modoOscuro === true ? "black" : "#D9D9D9",
+        tabBarActiveTintColor: '#4C7BFF',
+        tabBarInactiveTintColor: profile.modoOscuro ? "#A1A6AD" : "#6B7280",
       })}
     >
       <Tab.Screen name="Home" component={HomeGestor} />
@@ -260,12 +274,12 @@ function TecnicoScreens() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarStyle: {
-          backgroundColor: profile.modoOscuro === true ? "white" : "#2C2C2C",
-          borderTopWidth: 1,
-          borderColor: "#D9D9D9",
-          elevation: 20,
-          shadowOpacity: 20,
-        },
+        backgroundColor: profile.modoOscuro ? "#171A1E" : "#FFFFFF",
+        borderTopWidth: 1,
+        borderColor: profile.modoOscuro ? "rgba(255,255,255,0.10)" : "#E5E7EB",
+        elevation: 20,
+        shadowOpacity: 20,
+      },
         headerShown: false,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
@@ -286,8 +300,8 @@ function TecnicoScreens() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: profile.modoOscuro === true ? "black" : "#D9D9D9",
+        tabBarActiveTintColor: '#4C7BFF',
+        tabBarInactiveTintColor: profile.modoOscuro ? "#A1A6AD" : "#6B7280",
       })}
     >
       <Tab.Screen name="Home" component={HomeTecnico} />

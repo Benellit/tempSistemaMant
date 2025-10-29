@@ -150,12 +150,12 @@ export default function TareasAdmin({ navigation }) {
         return (
             <View style={{ flexDirection: 'row', gap: 10 }}>
                 <View style={{ flexDirection: "row", gap: 6 }}>
-                    <Feather name="camera" size={18} color={profile.modoOscuro === true ? "#7B7B7B" : "#EDEDED"} />
-                    <Text style={profile.modoOscuro === true ? styles.numerosClaro : styles.numerosOscuro}>{evidencias}</Text>
+                    <Feather name="camera" size={18} color={profile.modoOscuro ? "#EDEDED" : "#353335"} />
+                    <Text style={profile.modoOscuro ? styles.numerosOscuro : styles.numerosClaro}>{evidencias}</Text>
                 </View>
                 <View style={{ flexDirection: "row", gap: 6 }}>
-                    <AntDesign name="book" size={18} color={profile.modoOscuro === true ? "#7B7B7B" : "#EDEDED"} />
-                    <Text style={profile.modoOscuro === true ? styles.numerosClaro : styles.numerosOscuro}>{reportes}</Text>
+                    <AntDesign name="book" size={18} color={profile.modoOscuro ? "#EDEDED" : "#353335"} />
+                    <Text style={profile.modoOscuro ? styles.numerosOscuro : styles.numerosClaro}>{reportes}</Text>
                 </View>
             </View>
         );
@@ -271,26 +271,26 @@ export default function TareasAdmin({ navigation }) {
         >
             <View style={{ flex: 1 }}>
                 {/* Header */}
-                <View style={profile.modoOscuro === true ? styles.headerClaro : styles.headerOscuro}>
+                <View style={profile.modoOscuro ? styles.headerOscuro : styles.headerClaro}>
                     <View>
-                        <Text style={profile.modoOscuro === true ? styles.tituloClaro : styles.tituloOscuro}>Tareas</Text>
+                        <Text style={profile.modoOscuro ? styles.tituloOscuro : styles.tituloClaro}>Tareas</Text>
                     </View>
                     <View style={{ flexDirection: "row", gap: 10 }}>
                         <View style={{ marginBottom: 0, marginTop: 5, flex: 1 }}>
                             <TextInput
                                 placeholder="Buscar"
-                                placeholderTextColor={profile.modoOscuro === true ? "black" : "#FFFF"}
-                                style={styles.inputBusqueda}
+                                placeholderTextColor={profile.modoOscuro ? "#BDBDBD" : "#6B7280"}
+                                style={[styles.inputBusqueda, { color: profile.modoOscuro ? "#FFFFFF" : "#111827" }]}
                                 value={busqueda}
                                 onChangeText={setBusqueda}
                             />
                             <View style={{ position: "absolute", right: 15, top: 14 }}>
-                                <FontAwesome6 name="magnifying-glass" size={18} color={profile.modoOscuro === true ? "black" : "#FFFF"} />
+                                <FontAwesome6 name="magnifying-glass" size={18} color={profile.modoOscuro ? "#FFFFFF" : "#111827"} />
                             </View>
                         </View>
                         <View style={{ marginTop: 5, justifyContent: "center", alignContent: "center" }}>
                             <TouchableOpacity style={styles.opciones}>
-                                <Ionicons name="options-outline" size={22} color={profile.modoOscuro === true ? "black" : "#FFFF"} />
+                                <Ionicons name="options-outline" size={22} color={profile.modoOscuro ? "#FFFFFF" : "#111827"} />
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -308,9 +308,9 @@ export default function TareasAdmin({ navigation }) {
                     }
                 >
                     {tareas.map((tarea) => (
-                        <TouchableOpacity onPress={handlePress} key={tarea.id} style={profile.modoOscuro === true ? styles.cardsTareasClaro : styles.cardsTareasOscuro}>
+                        <TouchableOpacity onPress={handlePress} key={tarea.id} style={profile.modoOscuro ? styles.cardsTareasOscuro : styles.cardsTareasClaro}>
                             <View>
-                                <Text style={profile.modoOscuro === true ? styles.tituloCardClaro : styles.tituloCardOscuro}>{tarea.nombre}</Text>
+                                <Text style={profile.modoOscuro ? styles.tituloCardOscuro : styles.tituloCardClaro}>{tarea.nombre}</Text>
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignContent: "center" }}>
                                     <View style={{ flexDirection: "row", gap: 10, marginBottom: 15, marginTop: 5 }}>
                                         <View>
@@ -327,11 +327,11 @@ export default function TareasAdmin({ navigation }) {
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignContent: "center" }}>
                                     <View style={{ flexDirection: "row", gap: 7 }}>
                                         <View style={{ alignItems: "center", justifyContent: "center" }}>
-                                            <Feather name="calendar" size={20} color={profile.modoOscuro === true ? "#7B7B7B" : "#EDEDED"} />
+                                            <Feather name="calendar" size={20} color={profile.modoOscuro ? "#EDEDED" : "#7B7B7B"} />
                                         </View>
                                         <View style={{ alignItems: "center", justifyContent: "center" }}>
-                                            <Text style={profile.modoOscuro === true ? styles.numerosClaro : styles.numerosOscuro}>
-                                                {formatFecha(tarea.fechaCreacion)} - {formatFecha(tarea.fechaEntrega)}
+                                            <Text style={profile.modoOscuro ? styles.numerosOscuro : styles.numerosClaro}>
+                                            {formatFecha(tarea.fechaCreacion)} - {formatFecha(tarea.fechaEntrega)}
                                             </Text>
                                         </View>
                                     </View>
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 6,
         borderBottomWidth: 2,
-        borderColor: "#D9D9D9"
+        borderColor: "#3A3A3A"
     },
     tituloClaro: {
         color: "black",

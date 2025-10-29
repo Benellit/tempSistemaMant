@@ -54,6 +54,62 @@ const UsuariosGestor = ({ navigation }) => {
                usuario.rol?.toLowerCase().includes(termino);
     });
 
+    // === Helpers visuales ===
+const getEstadoColor = (estado) => {
+  if (!estado) return '#9E9E9E';
+  const s = estado.toLowerCase();
+  if (s.includes('activo')) return '#26D07C';     // verde presencia
+  if (s.includes('inac') || s.includes('suspend')) return '#F5615C'; // rojo
+  return '#9E9E9E'; // gris neutro
+};
+
+const ROLE_META = {
+  Administrador: { bg: '#6C63FF', text: '#FFFFFF', icon: 'shield-outline' },
+  Gestor:        { bg: '#4C7BFF', text: '#FFFFFF', icon: 'briefcase-outline' },
+  Tecnico:       { bg: '#2BB0B5', text: '#FFFFFF', icon: 'construct-outline' },
+};
+
+const getSucursalLabel = (u) => {
+  const val = u.sucursalNombre ?? u.sucursal ?? u.Sucursal ?? u.IDSucursal;
+  if (!val) return "—";
+
+  // Si es DocumentReference (tiene .id y .path)
+  if (typeof val === "object" && val !== null && "id" in val && "path" in val) {
+    return sucursalesById[val.id] || val.id; // muestra nombre si lo tenemos, o el id
+  }
+
+  // Si es string (id de documento o nombre en texto)
+  if (typeof val === "string") {
+    return sucursalesById[val] || val;
+  }
+
+  // Cualquier otro tipo: forzamos a string para evitar el error
+  return String(val);
+};
+
+const [sucursalesById, setSucursalesById] = useState({});
+
+useEffect(() => {
+  (async () => {
+    try {
+      const snap = await getDocs(collection(db, "SUCURSAL"));
+      const map = {};
+      snap.forEach(d => {
+        const data = d.data() || {};
+        map[d.id] =
+          data.nombre ||
+          data.Nombre ||
+          data.name ||
+          data.titulo ||
+          `Sucursal ${d.id.slice(0,6)}`;
+      });
+      setSucursalesById(map);
+    } catch (e) {
+      console.log("No se pudieron cargar sucursales:", e);
+    }
+  })();
+}, []);
+
     // Navegar al perfil del usuario seleccionado
     const verPerfilUsuario = (usuario) => {
         navigation.navigate('PerfilUsuarioShared', { userId: usuario.id });
@@ -133,7 +189,7 @@ const UsuariosGestor = ({ navigation }) => {
 
                 <View style={styles.container}>
                     <ScrollView
-                        contentContainerStyle={{ padding: 20 }}
+                        contentContainerStyle={{ padding: 15 }}
                         refreshControl={
                             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                         }
@@ -155,39 +211,94 @@ const UsuariosGestor = ({ navigation }) => {
                                     key={usuario.id}
                                     style={profile.modoOscuro ? styles.tarjetaOscuro : styles.tarjetaClaro}
                                     onPress={() => verPerfilUsuario(usuario)}
-                                >
-                                    <Image 
-                                        source={{ uri: usuario.fotoPerfil || 'https://via.placeholder.com/60' }}
-                                        style={styles.fotoPerfil}
-                                    />
-                                    <View style={styles.infoUsuario}>
+                                    >
+                                    {/* FILA SUPERIOR: avatar + info + chevron */}
+                                    <View style={styles.topRow}>
+                                        <View style={styles.avatarWrap}>
+                                        <Image
+                                            source={{
+                                            uri:
+                                                usuario.fotoPerfil?.trim()
+                                                ? usuario.fotoPerfil
+                                                : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+                                            }}
+                                            style={styles.fotoPerfil}
+                                        />
+                                        <View
+                                            style={[
+                                            styles.statusDot,
+                                            {
+                                                backgroundColor: getEstadoColor(usuario.estado),
+                                                // borde del punto igual al fondo de la card para que “recorte”
+                                                borderColor: profile.modoOscuro ? "#2C2C2C" : "#FFFFFF",
+                                            },
+                                            ]}
+                                        />
+                                        </View>
+
+                                        <View style={styles.infoUsuario}>
                                         <Text style={profile.modoOscuro ? styles.nombreOscuro : styles.nombreClaro}>
                                             {usuario.primerNombre} {usuario.segundoNombre} {usuario.primerApellido} {usuario.segundoApellido}
                                         </Text>
-                                        <Text style={styles.email}>{usuario.email}</Text>
-                                        <View style={styles.detallesContainer}>
-                                            <View style={[
-                                                styles.badge, 
-                                                { backgroundColor: usuario.rol === 'Gestor' ? '#4CAF50' : '#2196F3' }
-                                            ]}>
-                                                <Text style={styles.badgeText}>{usuario.rol}</Text>
-                                            </View>
-                                            <View style={[
-                                                styles.badge,
-                                                { backgroundColor: usuario.estado === 'Activo' ? '#4CAF50' : '#F44336' }
-                                            ]}>
-                                                <Text style={styles.badgeText}>{usuario.estado}</Text>
-                                            </View>
+
+                                        <Text style={profile.modoOscuro ? styles.emailOscuro : styles.emailClaro}>
+                                            {usuario.email}
+                                        </Text>
+
+                                        {/* Pill de rol (arriba) */}
+                                        
                                         </View>
-                                    </View>
-                                    <View style={styles.iconoFlecha}>
+
+                                        <View style={styles.iconoFlecha}>
                                         <Ionicons
                                             name="chevron-forward"
-                                            size={24}
-                                            color={profile.modoOscuro ? '#ccc' : '#666'} 
+                                            size={22}
+                                            color={profile.modoOscuro ? "#A1A6AD" : "#6B7280"}
                                         />
+                                        </View>
                                     </View>
-                                </TouchableOpacity>
+
+                                    {/* DIVISOR CENTRAL */}
+                                    <View
+                                        style={[
+                                        styles.cardDivider,
+                                        { backgroundColor: profile.modoOscuro ? "rgba(255,255,255,0.10)" : "#EEF2F7" },
+                                        ]}
+                                    />
+
+                                    {/* FILA INFERIOR: sucursal (izq) + chip con rango (der) */}
+                                    <View style={styles.bottomRow}>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={profile.modoOscuro ? styles.footTextOscuro : styles.footTextClaro}>
+                                        Sucursal: {getSucursalLabel(usuario)}
+                                        </Text>
+                                    </View>
+
+                                    <View style={styles.rightCol}>
+                                        <View
+                                        style={[
+                                            styles.roleChip,
+                                            {
+                                            borderColor: profile.modoOscuro ? "rgba(255,255,255,0.14)" : "#D5DAE1",
+                                            backgroundColor: profile.modoOscuro ? "rgba(255,255,255,0.06)" : "#F8FAFD",
+                                            },
+                                        ]}
+                                        >
+                                        <Ionicons
+                                            name={ROLE_META[usuario.rol]?.icon || "person-outline"}
+                                            size={12}
+                                            color={profile.modoOscuro ? "#D8DEE6" : "#334155"}
+                                            style={{ marginRight: 6 }}
+                                        />
+                                        <Text style={profile.modoOscuro ? styles.roleChipTextOsc : styles.roleChipTextClr}>
+                                            {usuario.rol || "—"}
+                                        </Text>
+                                        </View>
+                                    </View>
+                                    </View>
+
+                                    </TouchableOpacity>
+
                             ))
                         )}
                     </ScrollView>
@@ -283,34 +394,35 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     tarjetaClaro: {
-        backgroundColor: 'white',
-        borderRadius: 12,
-        padding: 15,
-        marginBottom: 15,
-        flexDirection: 'row',
-        alignItems: 'center',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    tarjetaOscuro: {
-        backgroundColor: '#2C2C2C',
-        borderRadius: 12,
-        padding: 15,
-        marginBottom: 15,
-        flexDirection: 'row',
-        alignItems: 'center',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 3,
-    },
+  backgroundColor: 'white',
+  borderRadius: 8,
+  paddingHorizontal: 15,
+  paddingVertical: 12,     // un poco más para el bloque inferior
+  marginBottom: 10,
+  elevation: 30,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.15,
+  shadowRadius: 6,
+},
+tarjetaOscuro: {
+  backgroundColor: '#2C2C2C',
+  borderRadius: 8,
+  paddingHorizontal: 15,
+  paddingVertical: 12,
+  marginBottom: 10,
+  elevation: 30,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.3,
+  shadowRadius: 6,
+},
+
+
+
     fotoPerfil: {
-        width: 60,
-        height: 60,
+        width: 62,
+        height: 62,
         borderRadius: 30,
         marginRight: 15,
     },
@@ -349,8 +461,92 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     iconoFlecha: {
-        marginLeft: 10,
-    },
+  marginLeft: 10,
+  width: 28,
+  alignItems: 'flex-end',
+},
+
+    topRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',  // ✅ separa izquierda/derecha
+},
+
+
+cardDivider: {
+  height: 1,
+  marginTop: 10,
+  marginBottom: 8,
+  borderRadius: 1,
+},
+
+bottomRow: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "flex-start",  // permite que el texto quede arriba
+  marginTop: 4,
+},
+rightCol: {
+  flexDirection: "column",
+  alignItems: "flex-end",
+},
+
+
+footTextClaro: { fontSize: 12, color: '#6B7280' },
+footTextOscuro: { fontSize: 12, color: '#A1A6AD' },
+
+roleChip: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingHorizontal: 10,
+  paddingVertical: 4,
+  borderRadius: 999,
+  borderWidth: 1,
+},
+roleChipTextClr: { fontSize: 12, fontWeight: '600', color: '#334155' },
+roleChipTextOsc: { fontSize: 12, fontWeight: '600', color: '#D8DEE6' },
+
+    avatarWrap: {
+  width: 48,
+  height: 48,
+  borderRadius: 24,
+  marginRight: 12,
+  position: 'relative',
+  overflow: 'visible',
+},
+fotoPerfil: {
+  width: 49,
+  height: 49,
+  borderRadius: 24,
+},
+statusDot: {
+  position: 'absolute',
+  right: -2,
+  bottom: -2,
+  width: 13,
+  height: 13,
+  borderRadius: 7,
+  borderWidth: 2,
+  zIndex: 10,
+  elevation: 2,
+  pointerEvents: 'none',
+},
+
+infoUsuario: { flex: 1 },
+nombreClaro: { fontSize: 16, fontWeight: '700', color: 'black', marginBottom: 2 },
+nombreOscuro:{ fontSize: 16, fontWeight: '700', color: 'white', marginBottom: 2 },
+emailClaro:  { fontSize: 13, color: '#6B7280', marginBottom: 8, marginTop: 2},
+emailOscuro: { fontSize: 13, color: '#A1A6AD', marginBottom: 8, marginTop: 2 },
+metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+rolePill: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingHorizontal: 10,
+  paddingVertical: 4,
+  borderRadius: 999,
+},
+rolePillText: { fontSize: 12, fontWeight: '600' },
+
 });
 
 export default UsuariosGestor;

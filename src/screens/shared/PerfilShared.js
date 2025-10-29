@@ -23,57 +23,73 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 const db = getFirestore(appFirebase);
 
 // ========= TEMAS =========
+// ========= TEMAS (frío-neutro) =========
 const themeLight = {
   name: "light",
-  bg: "#f1f3f6",
-  card: "#ffffff",
-  cardAlt: "#e9ecef",
-  border: "#e5e7eb",
-  borderSubtle: "#d0d5db",
-  text: "#1f2937",
-  textMuted: "#6b7280",
-  inputBg: "#f9fafb",
-  inputDisabledBg: "#f3f4f6",
-  inputText: "#111827",
-  placeholder: "#9ca3af",
-  primary: "#007AFF",
-  danger: "#d9534f",
+  // Bases
+  bg: "#F5F6F8",            // más neutro que #f1f3f6
+  card: "#FFFFFF",
+  cardAlt: "#F0F2F5",
+  // Texto
+  text: "#1F242B",          // gris neutro frío (menos azulado)
+  textMuted: "#7E8792",
+  // Bordes / divisores
+  border: "#E6E8EB",
+  borderSubtle: "#ECEFF2",
+  divider: "#EDEFf2",
+  // Inputs
+  inputBg: "#FAFBFC",
+  inputDisabledBg: "#F2F4F6",
+  inputText: "#151A20",
+  placeholder: "#9AA1AA",
+  // Accento
+  primary: "#3A7AFE",       // azul más sobrio que #007AFF
+  danger: "#D9534F",
+  // UI chips / toggles
+  chipBg: "#F7F9FC",
+  chipBorder: "#E3E8EF",
+  chipActiveBg: "#EBF2FF",
+  chipActiveBorder: "#D7E4FF",
+  toggleBg: "#FFFFFF",
+  toggleBorder: "#E6E8EB",
+  toggleIcon: "#1F242B",
+  // Sombra
   shadow: 0.08,
-  divider: "#eef2f7",
-  chipBg: "#f4f7ff",
-  chipBorder: "#dbeafe",
-  chipActiveBg: "#e0ecff",
-  chipActiveBorder: "#bcd4ff",
-  toggleBg: "#fff",
-  toggleBorder: "#e5e7eb",
-  toggleIcon: "#1f2937",
 };
 
 const themeDark = {
   name: "dark",
-  bg: "#0b1220",
-  card: "#101826",
-  cardAlt: "#0f172a",
-  border: "rgba(88, 79, 79, 0.51)",        // borde tenue blanco
-  borderSubtle: "rgba(255,255,255,0.07)", // aún más suave
-  text: "#e5e7eb",
-  textMuted: "#9aa7b8",
-  inputBg: "#0f172a",
-  inputDisabledBg: "#0c1422",
-  inputText: "#e5e7eb",
-  placeholder: "#7b8796",
-  primary: "#4ea8ff",
-  danger: "#ef4444",
-  shadow: 0.25,
-  divider: "rgba(255,255,255,0.1)",       // separadores más visibles
-  chipBg: "#111a2a",
-  chipBorder: "rgba(255,255,255,0.1)",
+  // Bases
+  bg: "#121418",            // neutro frío (menos azulado que #0b1220)
+  card: "#171A20",
+  cardAlt: "#1B1F26",
+  // Texto
+  text: "#E6EAF0",
+  textMuted: "#9AA4B0",
+  // Bordes / divisores
+  border: "rgba(255,255,255,0.12)",
+  borderSubtle: "rgba(255,255,255,0.08)",
+  divider: "rgba(255,255,255,0.10)",
+  // Inputs
+  inputBg: "#151A20",
+  inputDisabledBg: "#14181E",
+  inputText: "#E6EAF0",
+  placeholder: "#8F98A3",
+  // Accento
+  primary: "#5B86FF",       // azul más neutro, no tan celeste
+  danger: "#EF4444",
+  // UI chips / toggles
+  chipBg: "#1A1F26",
+  chipBorder: "rgba(255,255,255,0.10)",
   chipActiveBg: "rgba(255,255,255,0.08)",
-  chipActiveBorder: "rgba(255,255,255,0.2)",
-  toggleBg: "#1f2937",
-  toggleBorder: "#1f2937",
-  toggleIcon: "#ffffff",
+  chipActiveBorder: "rgba(255,255,255,0.22)",
+  toggleBg: "#20242B",
+  toggleBorder: "#20242B",
+  toggleIcon: "#FFFFFF",
+  // Sombra
+  shadow: 0.22,
 };
+
 
 
 export default function PerfilShared({ navigation }) {
@@ -122,9 +138,10 @@ export default function PerfilShared({ navigation }) {
 
   // Tema actual (se recalcula cuando cambia modoOscuro)
   const theme = useMemo(
-  () => (userData.modoOscuro ? themeLight : themeDark),
+  () => (userData.modoOscuro ? themeDark : themeLight),
   [userData.modoOscuro]
-  );
+);
+
 
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -326,7 +343,7 @@ export default function PerfilShared({ navigation }) {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Mi Perfil</Text>
+        <Text style={styles.title}>Mi perfil</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity
             onPress={() => setIsEditing(!isEditing)}
@@ -351,8 +368,9 @@ export default function PerfilShared({ navigation }) {
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel={
-              userData.modoOscuro ? "Cambiar a modo oscuro" : "Cambiar a modo claro"
-            }
+            userData.modoOscuro ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
+          }
+
           >
             <Ionicons
             name={userData.modoOscuro ? "sunny" : "moon"}
@@ -591,22 +609,23 @@ function createStyles(theme) {
   alignItems: "center",
   paddingHorizontal: 20,
   paddingTop: 60,
-  paddingBottom: 20,
+  paddingBottom: 28,
   backgroundColor: theme.card,
   borderBottomWidth: 1,
-  borderBottomColor:
-    theme.name === "dark"
-      ? "rgba(255, 255, 255, 0.85)"  // borde blanco sutil para modo oscuro
-      : "rgba(0,0,0,0.08)",       // borde gris claro en modo claro
+  // Antes: condicional con rgba(...).
+  // Ahora: usa el tono sutil del tema para mantener coherencia neutra.
+  borderBottomColor: theme.borderSubtle,
 },
+
 
     headerActions: {
       flexDirection: "row",
       alignItems: "center",
     },
     title: {
-      fontSize: 28,
-      fontWeight: "700",
+      fontSize: 26,
+      fontWeight: "900",
+      marginTop: -10,
       color: theme.text,
     },
     editButton: {
@@ -619,6 +638,8 @@ function createStyles(theme) {
       alignItems: "center",
       justifyContent: "center",
       marginRight: 12,
+      marginTop: -10,
+      
     },
     editButtonActive: {
       backgroundColor: theme.chipActiveBg,
@@ -633,6 +654,7 @@ function createStyles(theme) {
       backgroundColor: theme.toggleBg,
       alignItems: "center",
       justifyContent: "center",
+      marginTop: -10,
     },
     darkModeToggleActive: {
       backgroundColor: theme.toggleBg,

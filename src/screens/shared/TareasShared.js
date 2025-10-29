@@ -287,7 +287,8 @@ export default function TareasShared({ navigation }) {
                                         opacity: refreshing ? 0.5 : 1,
                                     }}
                                 >
-                                    <EvilIcons name="close" size={24} color={profile.modoOscuro === true ? "black" : "#FFFF"} />
+                                    <EvilIcons name="close" size={24} color={profile.modoOscuro ? "#FFFFFF" : "#111827"} />
+
                                 </TouchableOpacity>
                             )}
 
@@ -338,10 +339,11 @@ export default function TareasShared({ navigation }) {
                         <TouchableOpacity
                             onPress={() => navegarMas(tarea.id)}
                             key={tarea.id}
-                            style={profile.modoOscuro ? styles.cardsTareasClaro : styles.cardsTareasOscuro}
+                            style={profile.modoOscuro ? styles.cardsTareasOscuro : styles.cardsTareasClaro}
+
                         >
                             <View>
-                                <Text style={profile.modoOscuro ? styles.tituloCardClaro : styles.tituloCardOscuro}>
+                                <Text style={profile.modoOscuro ? styles.tituloCardOscuro : styles.tituloCardClaro}>
                                     {tarea.nombre}
                                 </Text>
 
@@ -374,14 +376,16 @@ export default function TareasShared({ navigation }) {
                                     {/* 📸 Reportes y evidencias */}
                                     <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
                                         <View style={{ flexDirection: "row", gap: 3 }}>
-                                            <Feather name="camera" size={16} color={profile.modoOscuro ? "#353335" : "#EDEDED"} />
-                                            <Text style={profile.modoOscuro ? styles.numerosClaro : styles.numerosOscuro}>
+                                    <Feather name="camera" size={16} color={profile.modoOscuro ? "#EDEDED" : "#353335"} />
+                                            <Text style={profile.modoOscuro ? styles.numerosOscuro : styles.numerosClaro}>
+
                                                 {tarea.totalEvidencias}
                                             </Text>
                                         </View>
                                         <View style={{ flexDirection: "row", gap: 3 }}>
-                                            <AntDesign name="book" size={16} color={profile.modoOscuro ? "#353335" : "#EDEDED"} />
-                                            <Text style={profile.modoOscuro ? styles.numerosClaro : styles.numerosOscuro}>
+                                    <AntDesign name="book" size={16} color={profile.modoOscuro ? "#EDEDED" : "#353335"} />
+                                            <Text style={profile.modoOscuro ? styles.numerosOscuro : styles.numerosClaro}>
+
                                                 {tarea.totalReportes}
                                             </Text>
                                         </View>
@@ -391,8 +395,10 @@ export default function TareasShared({ navigation }) {
                                 {/* 👨‍🔧 Técnicos */}
                                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignContent: "center" }}>
                                     <View style={{ flexDirection: "row", gap: 7 }}>
-                                        <Feather name="calendar" size={20} color={profile.modoOscuro ? "#353335" : "#EDEDED"} />
-                                        <Text style={profile.modoOscuro ? styles.fechaClaro : styles.fechaOscuro}>
+                                        <Feather name="calendar" size={20} color={profile.modoOscuro ? "#EDEDED" : "#7B7B7B"} />
+
+                                        <Text style={profile.modoOscuro ? styles.fechaOscuro : styles.fechaClaro}>
+
                                             {formatFecha(tarea.fechaCreacion)} - {formatFecha(tarea.fechaEntrega)}
                                         </Text>
                                     </View>
@@ -492,7 +498,7 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 16,
         borderBottomWidth: 1,
-        borderColor: "#D9D9D9",
+        borderColor: "rgba(255,255,255,0.12)",
         marginBottom: 6,
     },
     tituloClaro: {
