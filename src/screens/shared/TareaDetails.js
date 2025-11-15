@@ -6,6 +6,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome"
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import MaterialIcons from "@expo/vector-icons/MaterialIcons"
+import { useFocusEffect } from '@react-navigation/native'
 import axios from "axios"
 import * as ImagePicker from "expo-image-picker"
 import { addDoc, arrayRemove, collection, doc, getDoc, getDocs, getFirestore, Timestamp, updateDoc, } from "firebase/firestore"
@@ -1006,7 +1007,38 @@ const TareaDetails = ({ route, navigation }) => {
         setModalVerReportes(true)
     }
 
+    const idPlantilla =
+        tarea?.IDPlantilla?.id ||
+        tarea?.IDPlantilla?.path?.split('/')?.pop() ||
+        tarea?.IDPlantilla?.referencePath?.split('/')?.pop() ||
+        null;
 
+    const [desplegarOpciones, setDesplegarOpciones] = useState(false);
+
+
+    const navegarEditPlantillaRepetitivas = (IDTareaRepetitiva) => {
+        setDesplegarOpciones(false);
+        navigation.navigate("EditarTareas", {
+            id: IDTareaRepetitiva,
+            tareaRepetitiva: true,
+            tipoTarea: tarea.tipoTarea,
+        })
+    }
+
+    const navegarEditTareaNormales = (IDTarea) => {
+        setDesplegarOpciones(false);
+        navigation.navigate("EditarTareas", {
+            id: IDTarea,
+            tareaRepetitiva: false,
+            tipoTarea: tarea.tipoTarea,
+        })
+    }
+
+    useFocusEffect(
+        useCallback(() => {
+            cargarDatos();
+        }, [])
+    );
 
     if (loading) {
         return (
@@ -1038,12 +1070,80 @@ const TareaDetails = ({ route, navigation }) => {
                     <Ionicons name="chevron-back" size={24} color={profile.modoOscuro ? "#FFFF" : "#1A1A1A"} />
                 </TouchableOpacity>
                 {(profile.rol === "Administrador" || profile.rol === "Gestor") && (
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate("EditarTareas", { id: id })}
-                        style={{ padding: 8, borderRadius: 8, backgroundColor: profile.modoOscuro ? "#2C2C2C" : "#FFF" }}
-                    >
-                        <Feather name="edit" size={22} color={profile.modoOscuro ? "#FFFF" : "#1A1A1A"} />
-                    </TouchableOpacity>
+                    <View>
+                        {
+                            tarea.IDPlantilla ? (
+                                <View style={{ position: 'relative', minWidth: 180 }}>
+                                    <TouchableOpacity
+                                        onPress={() => setDesplegarOpciones(prev => !prev)}
+                                        style={{
+                                            padding: 8,
+                                            borderRadius: 8,
+                                            backgroundColor: profile.modoOscuro ? '#2C2C2C' : '#FFF',
+                                            alignSelf: 'flex-end',
+                                        }}
+                                    >
+                                        <Feather
+                                            name="edit"
+                                            size={22}
+                                            color={profile.modoOscuro ? '#FFF' : '#1A1A1A'}
+                                        />
+                                    </TouchableOpacity>
+
+                                    {desplegarOpciones && (
+                                        <View
+                                            style={{
+                                                position: 'absolute',
+                                                top: 45,
+                                                right: 0,
+                                                backgroundColor: profile.modoOscuro ? '#2C2C2C' : '#FFF',
+                                                borderRadius: 8,
+                                                padding: 8,
+                                                zIndex: 5000,
+                                                elevation: 5,
+                                                shadowColor: '#000',
+                                                shadowOpacity: 0.2,
+                                                shadowOffset: { width: 0, height: 2 },
+                                                shadowRadius: 4,
+                                                alignSelf: 'flex-start',
+                                            }}
+                                        >
+                                            <TouchableOpacity
+                                                onPress={() =>
+                                                    navegarEditTareaNormales(id)
+                                                }
+                                                style={{ paddingVertical: 6 }}
+                                            >
+                                                <Text style={{ color: profile.modoOscuro ? '#FFF' : '#000' }}>
+                                                    Editar tarea seleccionada
+                                                </Text>
+                                            </TouchableOpacity>
+
+                                            <View style={profile.modoOscuro ? styles.dividerOscuro : styles.dividerClaro} />
+
+                                            <TouchableOpacity
+                                                onPress={() =>
+                                                    navegarEditPlantillaRepetitivas(idPlantilla)
+                                                }
+                                                style={{ paddingVertical: 6 }}
+                                            >
+                                                <Text style={{ color: profile.modoOscuro ? '#FFF' : '#000' }}>
+                                                    Editar plantilla de la tarea repetitiva
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
+                                </View>
+                            ) : (
+                                <TouchableOpacity
+                                    onPress={() => navegarEditTareaNormales(id)}
+                                    style={{ padding: 8, borderRadius: 8, backgroundColor: profile.modoOscuro ? "#2C2C2C" : "#FFF" }}
+                                >
+                                    <Feather name="edit" size={22} color={profile.modoOscuro ? "#FFFF" : "#1A1A1A"} />
+                                </TouchableOpacity>
+                            )
+                        }
+                    </View>
                 )}
             </View>
 

@@ -262,6 +262,17 @@ const ModalFiltros = ({ open, setOpenFiltros, setFiltros, filtros }) => {
                             marginTop: 10,
                         }}>
                             <TouchableOpacity
+                                style={[styles.botonQuitarfiltros, { flex: 1 }]}
+                                onPress={() => {
+                                    setFiltros({ sucursal: null, prioridad: null, estado: null });
+                                    setOpenFiltros(false);
+                                }}
+                            >
+                                <Text style={profile.modoOscuro ? { color: "#b4b3b3ff", fontWeight: 800, fontSize: 15 } : { color: 'white', fontWeight: 800, fontSize: 15 }}>
+                                    Quitar Filtros
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
                                 style={[styles.botonFiltros, { flex: 1 }]}
                                 onPress={() => {
                                     console.log("📦 Filtros aplicados:", {
@@ -282,18 +293,6 @@ const ModalFiltros = ({ open, setOpenFiltros, setFiltros, filtros }) => {
                                     Aplicar Filtros
                                 </Text>
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.botonQuitarfiltros, { flex: 1 }]}
-                                onPress={() => {
-                                    setFiltros({ sucursal: null, prioridad: null, estado: null });
-                                    setOpenFiltros(false);
-                                }}
-                            >
-                                <Text style={profile.modoOscuro ? { color: "#b4b3b3ff", fontWeight: 800, fontSize: 15 } : { color: 'white', fontWeight: 800, fontSize: 15 }}>
-                                    Quitar Filtros
-                                </Text>
-                            </TouchableOpacity>
-
                         </View>
                     </View>
                 </View>

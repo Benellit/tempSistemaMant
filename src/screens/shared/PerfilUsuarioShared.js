@@ -728,7 +728,7 @@ export default function PerfilUsuarioShared({ route, navigation }) {
         </TouchableOpacity>
       )}
 
-      <View style={{ height: 40 }} />
+      <View style={{ marginBottom: -30 }} />
 
       {/* MODALES */}
       {/* Rol */}

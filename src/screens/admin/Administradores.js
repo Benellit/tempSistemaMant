@@ -231,7 +231,7 @@ const sucursalFiltroEfectivo =
                                         opacity: refreshing ? 0.5 : 1,
                                     }}
                                 >
-                                    <EvilIcons name="close" size={24} color={profile.modoOscuro ? '#FFFFFF' : '#111827'} />
+                                    <EvilIcons name="close" size={24} color={profile.modoOscuro === true ? "#FFFF" : "#1A1A1A"} />
                                 </TouchableOpacity>
                             )}
 
@@ -249,7 +249,7 @@ const sucursalFiltroEfectivo =
                                     opacity: refreshing ? 0.6 : 1,
                                 }}
                             >
-                                <FontAwesome6 name="magnifying-glass" size={16} color={profile.modoOscuro ? '#FFFF' : '#FFFF'} />
+                                <FontAwesome6 name="magnifying-glass" size={16}  color={profile.modoOscuro === true ? "black" : "#FFFF"} />
                             </TouchableOpacity>
                         </View>
 
@@ -258,7 +258,7 @@ const sucursalFiltroEfectivo =
                             style={styles.opciones}
                            onPress={() => setOpenFiltros(true)}
                             >
-                            <Ionicons name="options-outline" size={24} color="#FFFF" />
+                            <Ionicons name="options-outline" size={24}  color={profile.modoOscuro === true ? "black" : "#FFFF"} />
                             </TouchableOpacity>
 
                         </View>
@@ -419,14 +419,12 @@ const styles = StyleSheet.create({
         paddingTop: 15,
         paddingHorizontal: 15,
         paddingBottom: 5,
-        backgroundColor: "#2C2C2C",
+        backgroundColor: "#1A1A1A",
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 5,
         elevation: 16,
-        borderBottomWidth: 1,
-        borderColor: "#D9D9D9"
     },
     tituloClaro: {
         color: "black",

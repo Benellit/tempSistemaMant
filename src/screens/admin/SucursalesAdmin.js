@@ -139,7 +139,6 @@ export default function SucursalesAdmin({ navigation }) {
         {/* Header (mismo patrón que Tareas) */}
         <View style={[
           profile.modoOscuro ? styles.headerOscuro : styles.headerClaro,
-          { backgroundColor: C.headerBg, borderColor: C.headerBorder }
         ]}>
           <View>
             <Text style={[
@@ -337,14 +336,12 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     paddingHorizontal: 15,
     paddingBottom: 5,
-    backgroundColor: "#2C2C2C",
+    backgroundColor: "#1A1A1A",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 16,
-    borderBottomWidth: 1,
-    borderColor: "#D9D9D9"
   },
   tituloClaro: {
     color: "black",

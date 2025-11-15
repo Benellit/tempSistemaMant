@@ -517,7 +517,6 @@ export default function TareasShared({ navigation }) {
                     <View style={styles.loadingOverlay}>
                         <View style={styles.loadingContainer}>
                             <ActivityIndicator size="large" color="#87aef0" />
-                            <Text style={styles.loadingText}>Aplicando filtros...</Text>
                         </View>
                     </View>
                 )}

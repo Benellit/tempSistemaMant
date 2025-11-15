@@ -812,7 +812,7 @@ export default function PerfilShared({ navigation }) {
       />
 
 
-      <View style={{ height: 40 }} />
+      <View style={{ marginBottom: -30 }} />
     </ScrollView>
   );
 }
